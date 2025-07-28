@@ -1,13 +1,17 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AuthPage from './pages/AuthPage';
+import CreateProfile from './pages/CreateProfile';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <AuthPage />
-      </div>
-    </BrowserRouter>
+    <Router>
+      <Routes>
+        <Route path="/" element={<AuthPage />} />
+        {/* <Route path="/chat" element={<ChatPage />} /> */}
+        <Route path="/generate-profile" element={<CreateProfile />} />
+      </Routes>
+    </Router>
   );
 }
 

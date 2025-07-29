@@ -22,3 +22,11 @@ export const FORM_ERROR = {
   PASSWORD: "Password is required",
   PASSWORD_LENGTH: "Password must be at least 6 characters"
 };
+
+//PROFILE SUMMARY TEXT
+export const PROFILE_SUMMARY = {
+  HEADING: "Create Your Digital Twin",
+  NEXT_BUTTON: "Next",
+  PREV_BUTTON: "Previous",
+  GENERATE_BUTTON: "Create Twin" 
+}

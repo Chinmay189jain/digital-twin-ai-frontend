@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { profileQuestions } from '../constants/questions';
+import { PROFILE_SUMMARY } from '../constants/text';
+import { createProfileSummary } from '../api/chatApi';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const CreateProfile: React.FC = () => {
+
+  const navigate = useNavigate();
+
   // State to track current step index in the form
   const [currentStep, setCurrentStep] = useState(0);
+
+  // Simulate API loading state
+  const [loading, setLoading] = useState(false);
 
   // State to store answers value by question ID
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -39,7 +49,31 @@ const CreateProfile: React.FC = () => {
 
   // Placeholder submit function for final profile creation
   const handleSubmit = async () => {
-    console.log('Submitting answers:', answers);
+    try {
+      setLoading(true);
+      // Combine prefix and user answer for each question
+      const combinedAnswers = profileQuestions.map((question) => {
+        const answer = answers[question.id]; // We're storing answers using prefix keys
+        return `${question.prefix}${answer}`;
+      });
+
+      const data = await createProfileSummary(combinedAnswers);
+
+      if (data) {
+        // Redirect to profile summary page
+        console.log("Profile summary data - \n"+data)
+      } else {
+        toast.error("Api failed: No data recieved.");
+      }
+
+    } catch (error: any) {
+      toast.error("Error in generating twin profile");
+      console.error("Error in generating twin profile:", error);
+      navigate('/generate-profile');
+    } finally {
+      setLoading(false);
+    }
+
   };
 
 
@@ -51,7 +85,7 @@ const CreateProfile: React.FC = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Create Your Digital Twin
+              {PROFILE_SUMMARY.HEADING}
             </h1>
             <span className="text-sm text-gray-500 dark:text-gray-400">
               Step {currentStep + 1} of {profileQuestions.length}
@@ -146,7 +180,7 @@ const CreateProfile: React.FC = () => {
               className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
-              Previous
+              {PROFILE_SUMMARY.PREV_BUTTON}
             </button>
 
             <button
@@ -154,7 +188,7 @@ const CreateProfile: React.FC = () => {
               disabled={!canProceed}
               className="flex items-center px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
-              {isLastStep ? 'Create Twin' : 'Next'}
+              {isLastStep ? PROFILE_SUMMARY.GENERATE_BUTTON : PROFILE_SUMMARY.NEXT_BUTTON}
               {!isLastStep && <ChevronRight className="w-4 h-4 ml-1" />}
             </button>
           </div>

@@ -3,21 +3,25 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { profileQuestions } from '../constants/questions';
 import { PROFILE_SUMMARY } from '../constants/text';
 import { createProfileSummary } from '../api/chatApi';
-import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { useTwin } from '../context/TwinContext';
+import { TwinGeneratingLoader } from '../components/LoadingSpinner';
+import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const CreateProfile: React.FC = () => {
 
   const navigate = useNavigate();
+
+  // Access shared context state
+  const { answers, setAnswers, setProfileSummary } = useTwin();
+  const { user } = useAuth();
 
   // State to track current step index in the form
   const [currentStep, setCurrentStep] = useState(0);
 
   // Simulate API loading state
   const [loading, setLoading] = useState(false);
-
-  // State to store answers value by question ID
-  const [answers, setAnswers] = useState<Record<string, string>>({});
 
   // Get current question object based on current step
   const currentQuestion = profileQuestions[currentStep];
@@ -52,18 +56,24 @@ const CreateProfile: React.FC = () => {
     try {
       setLoading(true);
       // Combine prefix and user answer for each question
+      debugger;
+      const name = PROFILE_SUMMARY.NAME_TEXT + user?.name;
       const combinedAnswers = profileQuestions.map((question) => {
         const answer = answers[question.id]; // We're storing answers using prefix keys
         return `${question.prefix}${answer}`;
       });
+      combinedAnswers.unshift(name);
 
       const data = await createProfileSummary(combinedAnswers);
 
       if (data) {
+        console.log(data);
+        setProfileSummary(data);
+        navigate('/profile-summary');
         // Redirect to profile summary page
-        console.log("Profile summary data - \n"+data)
       } else {
         toast.error("Api failed: No data recieved.");
+        navigate('/generate-profile');
       }
 
     } catch (error: any) {
@@ -76,6 +86,15 @@ const CreateProfile: React.FC = () => {
 
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="max-w-md w-full">
+          <TwinGeneratingLoader />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 flex items-center justify-center">

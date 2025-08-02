@@ -7,3 +7,8 @@ export const createProfileSummary = async (combinedAnswers: string[]) => {
     });
     return response.data;
 };
+
+export const getProfileSummary = async () => {
+  const response = await api.get('ai/get-profile');
+  return response.data;
+};

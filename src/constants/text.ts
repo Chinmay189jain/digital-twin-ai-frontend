@@ -17,7 +17,7 @@ export const REGISTER_TEXT = {
 
 //FORM ERROR
 export const FORM_ERROR = {
-  USERNAME: "Username is required",
+  USERNAME: "name is required",
   EMAIL: "Email is required",
   PASSWORD: "Password is required",
   PASSWORD_LENGTH: "Password must be at least 6 characters"
@@ -28,5 +28,6 @@ export const PROFILE_SUMMARY = {
   HEADING: "Create Your Digital Twin",
   NEXT_BUTTON: "Next",
   PREV_BUTTON: "Previous",
-  GENERATE_BUTTON: "Create Twin" 
+  GENERATE_BUTTON: "Create Twin",
+  NAME_TEXT: "My name is "
 }

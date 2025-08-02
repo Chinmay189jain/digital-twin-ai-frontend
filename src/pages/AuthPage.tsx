@@ -2,8 +2,11 @@ import React, { useState, ChangeEvent, FormEvent } from "react";
 import { BrainCog, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 import { LOGIN_TEXT, REGISTER_TEXT, FORM_ERROR } from "../constants/text";
 import { login, register } from '../api/authApi';
-import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { LoadingSpinner } from "../components/LoadingSpinner";
+import { decodeToken } from "../utils/jwtUtils";
+import { useAuth } from "../context/AuthContext";
+import toast from 'react-hot-toast';
 
 // Define the shape of form data
 interface AuthFormData {
@@ -22,6 +25,9 @@ interface FormErrors {
 const AuthPage: React.FC = () => {
 
   const navigate = useNavigate();
+
+  // Access shared context state
+  const { setUser } = useAuth();
 
   // State for showing/hiding password
   const [showPassword, setShowPassword] = useState(false);
@@ -102,6 +108,10 @@ const AuthPage: React.FC = () => {
       const data = await login(credentials);
       if (data?.token) {
         localStorage.setItem("token", data.token);
+        const decoded = decodeToken(data.token);
+        if(decoded) {
+          setUser({email: decoded?.sub, name: decoded?.username})
+        }
         toast.success("Login successful!");
 
         // Redirect to chat after login
@@ -121,6 +131,10 @@ const AuthPage: React.FC = () => {
       const data = await register(credentials);
       if (data?.token) {
         localStorage.setItem("token", data.token);
+        const decoded = decodeToken(data.token);
+        if(decoded) {
+          setUser({email: decoded?.sub, name: decoded?.username})
+        }
         toast.success("Account created!");
 
         //navigate to CreateProfile for generating profile summary
@@ -134,6 +148,12 @@ const AuthPage: React.FC = () => {
       console.error("Registration error:", error);
     }
   };
+
+  if (loading) {
+      return (
+        <LoadingSpinner size="sm" className="mr-2" />
+      );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -162,7 +182,7 @@ const AuthPage: React.FC = () => {
             {!isLogin && (
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Username
+                  Full Name
                 </label>
                 <div className="mt-1 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -176,7 +196,7 @@ const AuthPage: React.FC = () => {
                     className={`block w-full pl-10 pr-3 py-2 border rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white transition-colors duration-200
                     ${errors.username ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                       }`}
-                    placeholder="Enter your user name"
+                    placeholder="Enter your full name"
                   />
                 </div>
                 {errors.username && (

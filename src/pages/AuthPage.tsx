@@ -4,8 +4,6 @@ import { LOGIN_TEXT, REGISTER_TEXT, FORM_ERROR } from "../constants/text";
 import { login, register } from '../api/authApi';
 import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from "../components/LoadingSpinner";
-import { decodeToken } from "../utils/jwtUtils";
-import { useAuth } from "../context/AuthContext";
 import toast from 'react-hot-toast';
 
 // Define the shape of form data
@@ -25,9 +23,6 @@ interface FormErrors {
 const AuthPage: React.FC = () => {
 
   const navigate = useNavigate();
-
-  // Access shared context state
-  const { setUser } = useAuth();
 
   // State for showing/hiding password
   const [showPassword, setShowPassword] = useState(false);
@@ -108,10 +103,6 @@ const AuthPage: React.FC = () => {
       const data = await login(credentials);
       if (data?.token) {
         localStorage.setItem("token", data.token);
-        const decoded = decodeToken(data.token);
-        if(decoded) {
-          setUser({email: decoded?.sub, name: decoded?.username})
-        }
         toast.success("Login successful!");
 
         // Redirect to chat after login
@@ -131,10 +122,6 @@ const AuthPage: React.FC = () => {
       const data = await register(credentials);
       if (data?.token) {
         localStorage.setItem("token", data.token);
-        const decoded = decodeToken(data.token);
-        if(decoded) {
-          setUser({email: decoded?.sub, name: decoded?.username})
-        }
         toast.success("Account created!");
 
         //navigate to CreateProfile for generating profile summary

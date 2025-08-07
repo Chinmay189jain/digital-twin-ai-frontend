@@ -31,3 +31,9 @@ export const PROFILE_SUMMARY = {
   GENERATE_BUTTON: "Create Twin",
   NAME_TEXT: "My name is "
 }
+
+//LAYOUT SUMMARY TEXT
+export const NAVBAR_LAYOUT = {
+  HEADING: "TwinAI",
+  NEW_CHAT: "New Chat"
+}

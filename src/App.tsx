@@ -5,6 +5,8 @@ import { Toaster } from 'react-hot-toast';
 import { PrivateRoute } from './routes/PrivateRoute';
 import GlobalContextProvider from './context/GlobalContextProvider';
 import ProfileSummary from './pages/ProfileSummary';
+import Layout from './components/Layout';
+import Chat from './pages/Chat';
 
 function App() {
   return (
@@ -19,7 +21,7 @@ function App() {
             <Route element={<PrivateRoute />}>
               <Route path="/generate-profile" element={<CreateProfile />} />
               <Route path="/profile-summary" element={<ProfileSummary />} />
-              {/* <Route path="/chat" element={<ChatPage />} /> */}
+              <Route path='/chat' element={<Layout><Chat /></Layout>} />
             </Route>
           </Routes>
         </Router>

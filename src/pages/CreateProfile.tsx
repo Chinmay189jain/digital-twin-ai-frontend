@@ -54,9 +54,8 @@ const CreateProfile: React.FC = () => {
   // Placeholder submit function for final profile creation
   const handleSubmit = async () => {
     try {
-      setLoading(true);
-      // Combine prefix and user answer for each question
-      debugger;
+        setLoading(true);
+    // Combine prefix and user answer for each question
       const name = PROFILE_SUMMARY.NAME_TEXT + user?.name;
       const combinedAnswers = profileQuestions.map((question) => {
         const answer = answers[question.id]; // We're storing answers using prefix keys
@@ -69,8 +68,8 @@ const CreateProfile: React.FC = () => {
       if (data) {
         console.log(data);
         setProfileSummary(data);
-        navigate('/profile-summary');
         // Redirect to profile summary page
+        navigate('/profile-summary');
       } else {
         toast.error("Api failed: No data recieved.");
         navigate('/generate-profile');

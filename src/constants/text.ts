@@ -37,3 +37,13 @@ export const NAVBAR_LAYOUT = {
   HEADING: "TwinAI",
   NEW_CHAT: "New Chat"
 }
+
+// CHATS
+export const CHATS = {
+  HEADING: "Start a conversation with your Digital Twin",
+  SUBHEADING: "Ask anything - your twin knows your personality and can provide personalized advice.",
+  QUESTION_1: "What should I focus on for personal growth?",
+  QUESTION_2: "How can I improve my work-life balance?",
+  QUESTION_3: "What career advice would you give me?",
+  QUESTION_4: "Help me make a difficult decision",
+}

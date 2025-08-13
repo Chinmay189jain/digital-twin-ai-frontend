@@ -6,7 +6,7 @@ import { PrivateRoute } from './routes/PrivateRoute';
 import GlobalContextProvider from './context/GlobalContextProvider';
 import ProfileSummary from './pages/ProfileSummary';
 import Layout from './components/Layout';
-import Chat from './pages/Chat';
+import Chat from './pages/chat/Chat';
 
 function App() {
   return (

@@ -7,6 +7,7 @@ import GlobalContextProvider from './context/GlobalContextProvider';
 import ProfileSummary from './pages/ProfileSummary';
 import Layout from './components/Layout';
 import Chat from './pages/chat/Chat';
+import History from './pages/History';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
               <Route path="/generate-profile" element={<CreateProfile />} />
               <Route path="/profile-summary" element={<ProfileSummary />} />
               <Route path='/chat' element={<Layout><Chat /></Layout>} />
+              <Route path='/history' element={<Layout><History /></Layout>} />
             </Route>
           </Routes>
         </Router>

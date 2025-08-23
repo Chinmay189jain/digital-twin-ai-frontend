@@ -47,3 +47,17 @@ export const CHATS = {
   QUESTION_3: "What career advice would you give me?",
   QUESTION_4: "Help me make a difficult decision",
 }
+
+// HISTORY
+export const HISTORY = {
+  HEADING: "Chat History",
+  TITLE: " Browse your previous conversations with your Digital Twin",
+  EMPTY_SESSION_HEADING: "No conversations yet",
+  EMPTY_SESSION_TITLE : "Try adjusting your search terms.",
+  SEARCH_SESSION_HEADING: "No conversations found",
+  SEARCH_SESSION_TITLE: "Start chatting with your Digital Twin to see your conversation history here.",
+  DIALOG_HEADING: "Delete chat 😬",
+  DIALOG_TITLE: "Are you sure you want to delete this conversation ?",
+  DIALOG_BUTTON_YES: "Delete",
+  DIALOG_BUTTON_NO: "Cancel"
+}

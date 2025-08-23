@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { profileQuestions } from '../constants/questions';
 import { PROFILE_SUMMARY } from '../constants/text';
-import { createProfileSummary } from '../api/chatApi';
+import { createProfileSummary } from '../api/profileApi';
 import { useNavigate } from 'react-router-dom';
 import { useTwin } from '../context/TwinContext';
 import { TwinGeneratingLoader } from '../components/LoadingSpinner';

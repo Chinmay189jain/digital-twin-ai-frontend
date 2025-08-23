@@ -1,22 +1,9 @@
+import { sign } from 'crypto';
 import api from './axios';
-
-// Generate Profile API
-export const createProfileSummary = async (combinedAnswers: string[]) => {
-  const response = await api.post('ai/generate-profile', {
-    answers: combinedAnswers,
-  });
-  return response.data;
-};
-
-// Get profile summary
-export const getProfileSummary = async () => {
-  const response = await api.get('ai/get-profile');
-  return response.data;
-};
 
 // Get ai response
 export const getAiResponse = async (userQuestion: string) => {
-  const response = await api.post('ai/ask', {
+  const response = await api.post('twin/chat', {
     userQuestion: userQuestion,
   });
   return response.data;
@@ -24,7 +11,22 @@ export const getAiResponse = async (userQuestion: string) => {
 
 // Get Chat History
 export const getChatHistory = async () => {
-  const response = await api.get('ai/chat-history')
+  const response = await api.get('twin/')
   return response.data;
+};
+
+// Get Chat Session History
+export const getAllChatSessions = async (searchQuery: string, signal?: AbortSignal) => {
+  const response = await api.get('twin/chat/sessions', {
+    params: searchQuery ? { searchQuery } : {},
+    signal: signal
+  });
+  return response.data;
+};
+
+// Delete a Chat Session
+export const deleteChatSession = async (sessionId: string) => {
+  const response = await api.delete(`twin/chat/session/${sessionId}`);
+  return response.data; // (will be empty since backend returns 204 No Content)
 };
 

@@ -5,19 +5,24 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerProps) {
-  const sizeClasses = {
+export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
+  size = 'md',
+  className = '',
+}) => {
+  const sizeClasses: Record<'sm' | 'md' | 'lg', string> = {
     sm: 'w-4 h-4',
     md: 'w-8 h-8',
-    lg: 'w-12 h-12'
+    lg: 'w-12 h-12',
   };
 
   return (
-    <div className={`animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 ${sizeClasses[size]} ${className}`} />
+    <div
+      className={`animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 ${sizeClasses[size]} ${className}`}
+    />
   );
-}
+};
 
-export function TwinGeneratingLoader() {
+export const TwinGeneratingLoader: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <div className="relative">
@@ -41,4 +46,31 @@ export function TwinGeneratingLoader() {
       </div>
     </div>
   );
-}
+};
+
+export const ChatSessionSkeleton: React.FC = () => (
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 animate-pulse">
+    <div className="flex items-start justify-between mb-2">
+      <div className="flex items-center space-x-3">
+        <div className="w-4 h-4 rounded bg-gray-300 dark:bg-gray-600" />
+        <div>
+          <div className="h-4 w-16 rounded bg-gray-300 dark:bg-gray-600 mb-1" />
+          <div className="h-3 w-28 rounded bg-gray-200 dark:bg-gray-700" />
+        </div>
+      </div>
+      <div className="w-6 h-6 rounded bg-gray-300 dark:bg-gray-600" />
+    </div>
+    <div className="space-y-2">
+      <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="h-3 w-2/5 rounded bg-gray-200 dark:bg-gray-700" />
+    </div>
+  </div>
+);
+
+export const ChatSessionSkeletonList: React.FC<{ count?: number }> = ({ count = 6 }) => (
+  <div className="space-y-3">
+    {Array.from({ length: count }).map((_, i) => (
+      <ChatSessionSkeleton key={i} />
+    ))}
+  </div>
+);

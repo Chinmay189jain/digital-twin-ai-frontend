@@ -23,11 +23,11 @@ const Chat: React.FC = () => {
   const [usertext, setUserText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null!);
   const textareaRef = useRef<HTMLTextAreaElement>(null!);
 
-  const { messages, setMessages } = useTwin();
   const { user } = useAuth();
 
   // Speech-to-Text 
@@ -79,8 +79,8 @@ const Chat: React.FC = () => {
         setMessages(sorted);
       } catch (error) {
         if (!mounted) return;
-        console.error('Failed to load chat history:', error);
-        toast.error('Failed to load chat history');
+        console.error('Failed to load chats:', error);
+        toast.error('Failed to load chats');
         setMessages([]);
       } finally {
         if (mounted) setIsLoading(false);
@@ -95,7 +95,7 @@ const Chat: React.FC = () => {
   const prevCountRef = useRef<number>(0);
   useEffect(() => {
     if (messages.length > prevCountRef.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
     }
     prevCountRef.current = messages.length;
   }, [messages.length]);
@@ -183,14 +183,6 @@ const Chat: React.FC = () => {
     [resizeTextarea]
   );
 
-  if (isLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-gray-900">
 
@@ -209,6 +201,11 @@ const Chat: React.FC = () => {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-gray-50 dark:bg-gray-900 [scrollbar-width:thin]">
+        {isLoading && (
+          <div className="flex items-center justify-center mt-100">
+            <LoadingSpinner />
+          </div>
+        )}
         <MessageList
           messages={messages}
           isTyping={isTyping}

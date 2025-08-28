@@ -23,6 +23,7 @@ function App() {
               <Route path="/generate-profile" element={<CreateProfile />} />
               <Route path="/profile-summary" element={<ProfileSummary />} />
               <Route path='/chat' element={<Layout><Chat /></Layout>} />
+              <Route path="/chat/:sessionId" element={<Layout><Chat /></Layout>} />
               <Route path='/history' element={<Layout><History /></Layout>} />
             </Route>
           </Routes>

@@ -103,7 +103,6 @@ const AuthPage: React.FC = () => {
       const data = await login(credentials);
       if (data?.token) {
         localStorage.setItem("token", data.token);
-        toast.success("Login successful!");
 
         // Redirect to chat after login
         navigate('/chat');

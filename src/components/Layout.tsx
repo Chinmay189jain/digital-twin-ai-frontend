@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import {
   BrainCog,
-  MessageCircle,
   History as HistoryIcon,
   Edit3,
   Settings as SettingsIcon,
@@ -23,7 +22,6 @@ type LayoutProps = { children: React.ReactNode };
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -33,9 +31,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [location.pathname]);
 
   const navigation = [
-    { name: "Chat", href: "/chat", icon: MessageCircle },
     { name: "History", href: "/history", icon: HistoryIcon },
-    { name: "Edit Profile", href: "/profile/edit", icon: Edit3 },
+    { name: "Edit Profile", href: "/profile-edit", icon: Edit3 },
     { name: "Settings", href: "/settings", icon: SettingsIcon },
   ];
 
@@ -43,7 +40,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       {/* Left Sidebar */}
       <aside className="w-64 bg-gray-900 dark:bg-gray-800 flex flex-col border-r border-gray-700">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <div className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">
@@ -56,7 +53,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="p-4">
           <Link
             to="/chat"
-            className="flex items-center justify-start w-full p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex items-center justify-start w-full p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors duration-200 focus:outline-none"
           >
             <Plus className="w-5 h-5" />
             <span className="ml-3">{NAVBAR_LAYOUT.NEW_CHAT}</span>
@@ -73,10 +70,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 to={item.href}
                 title={item.name}
                 className={({ isActive }: LinkState) =>
-                  `flex items-center justify-start w-full p-3 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                    isActive
-                      ? "bg-gray-700 text-white"
-                      : "text-gray-300 hover:text-white hover:bg-gray-700"
+                  `flex items-center justify-start w-full p-3 rounded-lg transition-colors duration-200 focus:outline-none ${isActive
+                    ? "bg-gray-700 text-white"
+                    : "text-gray-300 hover:text-white hover:bg-gray-700"
                   }`
                 }
               >

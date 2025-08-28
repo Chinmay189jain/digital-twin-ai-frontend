@@ -1,17 +1,19 @@
 import { sign } from 'crypto';
 import api from './axios';
 
-// Get ai response
-export const getAiResponse = async (userQuestion: string) => {
-  const response = await api.post('twin/chat', {
-    userQuestion: userQuestion,
-  });
+// Get chat response
+export const getChatResponse = async (sessionId: string | undefined, userQuestion: string) => {
+
+  const payload: { sessionId?: string; userQuestion: string } = { userQuestion };
+  if (sessionId && sessionId.trim()) payload.sessionId = sessionId;
+
+  const response = await api.post('twin/chat', payload);
   return response.data;
 };
 
 // Get Chat History
-export const getChatHistory = async () => {
-  const response = await api.get('twin/')
+export const getChatHistory = async (sessionId: string) => {
+  const response = await api.get(`twin/chat/${sessionId}`);
   return response.data;
 };
 

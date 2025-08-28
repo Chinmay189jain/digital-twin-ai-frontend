@@ -1,10 +1,10 @@
 // src/pages/chat/Chat.tsx
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from "react-router-dom";
 import { Bot } from 'lucide-react';
-import { useTwin } from '../../context/TwinContext';
 import { useAuth } from '../../context/AuthContext';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
-import { getChatHistory, getAiResponse } from '../../api/chatApi';
+import { getChatHistory, getChatResponse } from '../../api/chatApi';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import { UseSpeechRecognition } from './UseSpeechRecognition';
@@ -12,13 +12,18 @@ import toast from 'react-hot-toast';
 
 // Message type used across chat files
 export interface Message {
-  id?: string;
+  sessionId: string | undefined;
   question: string;
   aiResponse: string;
   timestamp?: string;
 }
 
 const Chat: React.FC = () => {
+
+  // Extract sessionId from the URL
+  const { sessionId } = useParams<{ sessionId: string }>();
+  const navigate = useNavigate();
+
   // UI + data state
   const [usertext, setUserText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -64,32 +69,25 @@ const Chat: React.FC = () => {
 
   // Load chat history once
   useEffect(() => {
-    let mounted = true;
     (async () => {
       try {
         setIsLoading(true);
-        const data = await getChatHistory();
-        if (!mounted) return;
-
-        // Ensure oldest → newest so latest renders at the bottom
-        const sorted = Array.isArray(data)
-          ? data.slice().sort((a: Message, b: Message) => ts(a) - ts(b))
-          : [];
-
-        setMessages(sorted);
+        if (sessionId && sessionId.trim()) {
+          const data = await getChatHistory(sessionId);
+          setMessages(data);
+        } else {
+          //new chat, no history yet
+          setMessages([]);
+        }
       } catch (error) {
-        if (!mounted) return;
         console.error('Failed to load chats:', error);
         toast.error('Failed to load chats');
         setMessages([]);
       } finally {
-        if (mounted) setIsLoading(false);
+        setIsLoading(false);
       }
     })();
-    return () => {
-      mounted = false;
-    };
-  }, [setMessages]);
+  }, [setMessages, sessionId]);
 
   // Scroll to latest only when a new message is added 
   const prevCountRef = useRef<number>(0);
@@ -115,6 +113,7 @@ const Chat: React.FC = () => {
 
     // Optimistic append of the user's message at the end
     const tempMessage: Message = {
+      sessionId: sessionId,
       question: currentMessage,
       aiResponse: '',
       timestamp: new Date().toISOString(),
@@ -122,7 +121,12 @@ const Chat: React.FC = () => {
     setMessages((prev) => [...prev, tempMessage]);
 
     try {
-      const data = await getAiResponse(currentMessage);
+      const data = await getChatResponse(sessionId, currentMessage);
+
+      // If a new session was created, update URL (no reload)
+      if (!sessionId || !sessionId.trim()) {
+        navigate(`/chat/${data.sessionId}`, { replace: true });
+      }
 
       // Update the last message with AI response
       setMessages((prev) => {
@@ -131,7 +135,7 @@ const Chat: React.FC = () => {
         const last = next.length - 1;
         next[last] = {
           ...next[last],
-          aiResponse: data?.answer || 'No response received',
+          aiResponse: data?.aiResponse || 'No response received',
           timestamp: data?.timestamp || new Date().toISOString(),
         };
         return next; // order already oldest → newest
@@ -201,18 +205,20 @@ const Chat: React.FC = () => {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-gray-50 dark:bg-gray-900 [scrollbar-width:thin]">
-        {isLoading && (
-          <div className="flex items-center justify-center mt-100">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
             <LoadingSpinner />
           </div>
+        ) : (
+          <MessageList
+            messages={messages}
+            isTyping={isTyping}
+            userEmail={user?.email ?? null}
+            onSuggest={handleSuggestedQuestion}
+            endRef={messagesEndRef}
+          />
         )}
-        <MessageList
-          messages={messages}
-          isTyping={isTyping}
-          userEmail={user?.email ?? null}
-          onSuggest={handleSuggestedQuestion}
-          endRef={messagesEndRef}
-        />
+
       </div>
 
       {/* Input */}

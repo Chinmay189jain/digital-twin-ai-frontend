@@ -5,9 +5,10 @@ type ChatType = {
   isUser: boolean;
   content: string;
   userEmail?: string | null;
+  showCursor?: boolean; 
 };
 
-function ChatBubble({ isUser, content, userEmail }: ChatType) {
+function ChatBubble({ isUser, content, userEmail, showCursor }: ChatType) {
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div className={`flex max-w-3xl ${isUser ? 'flex-row-reverse' : 'flex-row'} space-x-3`}>
@@ -32,7 +33,15 @@ function ChatBubble({ isUser, content, userEmail }: ChatType) {
               ? 'bg-indigo-600 text-white'
               : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600'
           }`}>
-            <p className="whitespace-pre-wrap">{content}</p>
+            <p className="whitespace-pre-wrap">
+              {content}
+              {showCursor && (
+                <span
+                  className="inline-block align-baseline ml-1 w-2 h-5 animate-pulse bg-gray-400/70 rounded-sm"
+                  aria-hidden="true"
+                />
+              )}
+            </p>
           </div>
         </div>
       </div>

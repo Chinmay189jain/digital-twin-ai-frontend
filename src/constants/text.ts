@@ -40,6 +40,8 @@ export const NAVBAR_LAYOUT = {
 
 // CHATS
 export const CHATS = {
+  NAVBAR_HEADING: "Your Digital Twin",
+  NAVBAR_TITLE: "AI assistant based on your personality profile",
   HEADING: "Start a conversation with your Digital Twin",
   SUBHEADING: "Ask anything - your twin knows your personality and can provide personalized advice.",
   QUESTION_1: "What should I focus on for personal growth?",

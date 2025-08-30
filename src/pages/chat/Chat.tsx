@@ -9,6 +9,7 @@ import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import { UseSpeechRecognition } from './UseSpeechRecognition';
 import toast from 'react-hot-toast';
+import { CHATS } from '../../constants/text';
 
 // Message type used across chat files
 export interface Message {
@@ -30,12 +31,15 @@ const Chat: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
 
+  // animating the last AI message
+  const [isStreaming, setIsStreaming] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null!);
   const textareaRef = useRef<HTMLTextAreaElement>(null!);
 
   const { user } = useAuth();
 
-  // Speech-to-Text 
+  // Speech-to-Text
   const {
     isListening,
     supportsSTT,
@@ -43,9 +47,6 @@ const Chat: React.FC = () => {
     toggleMic,
     setOnFinalTranscript,
   } = UseSpeechRecognition('en-IN');
-
-  // parse timestamp safely for sorting
-  const ts = (m: Message) => (m.timestamp ? Date.parse(m.timestamp) || 0 : 0);
 
   // Resize textarea 
   const resizeTextarea = useCallback((text: string) => {
@@ -67,16 +68,16 @@ const Chat: React.FC = () => {
     });
   }, [resizeTextarea, setOnFinalTranscript]);
 
-  // Load chat history once
+  // Load chat history for this session
   useEffect(() => {
     (async () => {
       try {
         setIsLoading(true);
         if (sessionId && sessionId.trim()) {
           const data = await getChatHistory(sessionId);
-          setMessages(data);
+          setMessages(Array.isArray(data) ? data : []);
         } else {
-          //new chat, no history yet
+          // New chat: no history yet
           setMessages([]);
         }
       } catch (error) {
@@ -92,13 +93,46 @@ const Chat: React.FC = () => {
   // Scroll to latest only when a new message is added 
   const prevCountRef = useRef<number>(0);
   useEffect(() => {
-    if (messages.length > prevCountRef.current) {
+    if (messages.length === 0) return;
+
+    if (prevCountRef.current === 0) {
+      // first mount / navigation / refresh: jump
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+    } else if (messages.length > prevCountRef.current) {
+      // on new message: smooth
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
     prevCountRef.current = messages.length;
-  }, [messages.length]);
+  }, [messages]);
 
-  // Handlers 
+  // Typewriter animation for the last AI message
+  // speedMs: delay per tick; step: chars revealed per tick
+  const animateAiAnswer = useCallback((fullText: string, speedMs = 16, step = 2) => {
+    setIsStreaming(true);
+    let i = 0;
+
+    const tick = () => {
+      i = Math.min(i + step, fullText.length);
+
+      setMessages(prev => {
+        if (prev.length === 0) return prev;
+        const next = prev.slice();
+        const last = next.length - 1;
+        next[last] = { ...next[last], aiResponse: fullText.slice(0, i) };
+        return next;
+      });
+
+      if (i < fullText.length) {
+        setTimeout(tick, speedMs);
+      } else {
+        setIsStreaming(false);
+      }
+    };
+
+    tick();
+  }, []);
+
+  // Handlers
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (isTyping) return;
@@ -118,7 +152,7 @@ const Chat: React.FC = () => {
       aiResponse: '',
       timestamp: new Date().toISOString(),
     };
-    setMessages((prev) => [...prev, tempMessage]);
+    setMessages(prev => [...prev, tempMessage]);
 
     try {
       const data = await getChatResponse(sessionId, currentMessage);
@@ -128,22 +162,14 @@ const Chat: React.FC = () => {
         navigate(`/chat/${data.sessionId}`, { replace: true });
       }
 
-      // Update the last message with AI response
-      setMessages((prev) => {
-        if (prev.length === 0) return prev;
-        const next = prev.slice();
-        const last = next.length - 1;
-        next[last] = {
-          ...next[last],
-          aiResponse: data?.aiResponse || 'No response received',
-          timestamp: data?.timestamp || new Date().toISOString(),
-        };
-        return next; // order already oldest → newest
-      });
+      // Animate the last message's AI response (client-side typewriter)
+      const answer = data?.aiResponse || 'No response received';
+      animateAiAnswer(answer, 30, 2);
+
     } catch (error) {
       console.error('Chat API failed:', error);
       toast.error('Chat failed. Please try again.');
-      setMessages((prev) => {
+      setMessages(prev => {
         if (prev.length === 0) return prev;
         const next = prev.slice();
         const last = next.length - 1;
@@ -170,19 +196,19 @@ const Chat: React.FC = () => {
 
   const handleTextareaChange = useCallback(
     (value: string) => {
-      setUserText(value);
-      resizeTextarea(value);
+    setUserText(value);
+    resizeTextarea(value);
     },
     [resizeTextarea]
   );
 
   const handleSuggestedQuestion = useCallback(
     (question: string) => {
-      setUserText(question);
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-        resizeTextarea(question);
-      }
+    setUserText(question);
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+      resizeTextarea(question);
+    }
     },
     [resizeTextarea]
   );
@@ -197,8 +223,8 @@ const Chat: React.FC = () => {
             <Bot className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Your Digital Twin</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">AI assistant based on your personality profile</p>
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">{CHATS.NAVBAR_HEADING}</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{CHATS.NAVBAR_TITLE}</p>
           </div>
         </div>
       </div>
@@ -213,6 +239,7 @@ const Chat: React.FC = () => {
           <MessageList
             messages={messages}
             isTyping={isTyping}
+            isStreaming={isStreaming}   // show blinking cursor on last AI bubble
             userEmail={user?.email ?? null}
             onSuggest={handleSuggestedQuestion}
             endRef={messagesEndRef}

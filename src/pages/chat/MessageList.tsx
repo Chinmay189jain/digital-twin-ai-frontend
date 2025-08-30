@@ -7,6 +7,7 @@ import { CHATS } from '../../constants/text';
 type Props = {
   messages: Message[];
   isTyping: boolean;
+  isStreaming: boolean;
   userEmail: string | null;
   onSuggest: (q: string) => void;
   endRef: React.RefObject<HTMLDivElement>;
@@ -15,6 +16,7 @@ type Props = {
 const MessageList: React.FC<Props> = ({
   messages,
   isTyping,
+  isStreaming,
   userEmail,
   onSuggest,
   endRef,
@@ -70,16 +72,26 @@ const MessageList: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Messages (oldest → newest) */}
+      {/* Messages*/}
       {messages.map((msg, index) => {
         const key = msg.timestamp || `row-${index}`;
+        const isLast = index === messages.length - 1;
+
         return (
           <React.Fragment key={key}>
+            {/* User bubble */}
             {msg.question?.trim() && (
               <ChatBubble isUser content={msg.question} userEmail={userEmail} />
             )}
-            {msg.aiResponse?.trim() && (
-              <ChatBubble isUser={false} content={msg.aiResponse} userEmail={userEmail} />
+
+            {/* AI bubbleRender if any text OR if it's the last message*/}
+            {(msg.aiResponse !== undefined && (msg.aiResponse.trim() !== '' || (isLast && isStreaming))) && (
+              <ChatBubble
+                isUser={false}
+                content={msg.aiResponse}
+                userEmail={userEmail}
+                showCursor={isLast && isStreaming}
+              />
             )}
           </React.Fragment>
         );

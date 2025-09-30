@@ -175,7 +175,7 @@ const Chat: React.FC = () => {
         const last = next.length - 1;
         next[last] = {
           ...next[last],
-          aiResponse: 'Sorry, I encountered an error. Please try again.',
+          aiResponse: CHATS.RESPONSE_FAILURE,
           timestamp: new Date().toISOString(),
         };
         return next;

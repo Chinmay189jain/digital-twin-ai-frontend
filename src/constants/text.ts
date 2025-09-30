@@ -26,10 +26,14 @@ export const FORM_ERROR = {
 //PROFILE SUMMARY TEXT
 export const PROFILE_SUMMARY = {
   HEADING: "Create Your Digital Twin",
+  ERROR_HEADING: "Failed to Load Questions",
+  ERROR_TITLE: "Unable to fetch profile questions. Please reload once again",
   NEXT_BUTTON: "Next",
   PREV_BUTTON: "Previous",
   GENERATE_BUTTON: "Create Twin",
-  NAME_TEXT: "My name is "
+  SUMMARY_HEADING: "our Digital Twin is Ready!",
+  SUMMARY_TITLE: "Twin Summary",
+  SUMMARY_BUTTON: "Ask Your Twin"
 }
 
 //LAYOUT SUMMARY TEXT
@@ -48,6 +52,7 @@ export const CHATS = {
   QUESTION_2: "How can I improve my work-life balance?",
   QUESTION_3: "What career advice would you give me?",
   QUESTION_4: "Help me make a difficult decision",
+  RESPONSE_FAILURE: "Sorry, I encountered an error. Please try again."
 }
 
 // HISTORY

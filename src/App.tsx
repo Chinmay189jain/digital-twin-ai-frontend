@@ -8,6 +8,7 @@ import ProfileSummary from './pages/ProfileSummary';
 import Layout from './components/Layout';
 import Chat from './pages/chat/Chat';
 import History from './pages/History';
+import EditProfile from './pages/EditProfile';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
               <Route path='/chat' element={<Layout><Chat /></Layout>} />
               <Route path="/chat/:sessionId" element={<Layout><Chat /></Layout>} />
               <Route path='/history' element={<Layout><History /></Layout>} />
+              <Route path='/profile-edit' element={<Layout><EditProfile /></Layout>} />
             </Route>
           </Routes>
         </Router>

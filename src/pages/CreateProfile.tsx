@@ -1,27 +1,82 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { profileQuestions } from '../constants/questions';
 import { PROFILE_SUMMARY } from '../constants/text';
-import { createProfileSummary } from '../api/profileApi';
+import { createProfileSummary, getProfileQuestion } from '../api/profileApi';
 import { useNavigate } from 'react-router-dom';
 import { useTwin } from '../context/TwinContext';
-import { TwinGeneratingLoader } from '../components/LoadingSpinner';
-import { useAuth } from '../context/AuthContext';
+import { LoadingSpinner, TwinGeneratingLoader } from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 
-const CreateProfile: React.FC = () => {
+// Define the question type based on your API structure
+interface ProfileQuestion {
+  id: number;
+  question: string;
+  type: 'RADIO' | 'SELECT' | 'TEXT';
+  options?: string[];
+  placeholder?: string;
+  prefix: string;
+}
 
+const CreateProfile: React.FC = () => {
   const navigate = useNavigate();
 
   // Access shared context state
   const { answers, setAnswers, setProfileSummary } = useTwin();
-  const { user } = useAuth();
 
   // State to track current step index in the form
   const [currentStep, setCurrentStep] = useState(0);
 
-  // Simulate API loading state
+  // State for profile questions from API
+  const [profileQuestions, setProfileQuestions] = useState<ProfileQuestion[]>([]);
+
+  // Loading states
   const [loading, setLoading] = useState(false);
+  const [questionsLoading, setQuestionsLoading] = useState(true);
+
+  // Fetch questions from API on component mount
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        setQuestionsLoading(true);
+        const data = await getProfileQuestion();
+        setProfileQuestions(data);
+      } catch (error) {
+        console.error('Error fetching profile questions:', error);
+        toast.error('Failed to load profile questions');
+      } finally {
+        setQuestionsLoading(false);
+      }
+    };
+
+    fetchQuestions();
+  }, []);
+
+  // Show loading spinner while fetching questions
+  if (questionsLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="max-w-md w-full">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if no questions loaded
+  if (profileQuestions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            {PROFILE_SUMMARY.ERROR_HEADING}
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {PROFILE_SUMMARY.ERROR_TITLE}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Get current question object based on current step
   const currentQuestion = profileQuestions[currentStep];
@@ -54,24 +109,17 @@ const CreateProfile: React.FC = () => {
   // Placeholder submit function for final profile creation
   const handleSubmit = async () => {
     try {
-        setLoading(true);
-    // Combine prefix and user answer for each question
-      const name = PROFILE_SUMMARY.NAME_TEXT + user?.name;
-      const combinedAnswers = profileQuestions.map((question) => {
-        const answer = answers[question.id]; // We're storing answers using prefix keys
-        return `${question.prefix}${answer}`;
-      });
-      combinedAnswers.unshift(name);
+      setLoading(true);
 
-      const data = await createProfileSummary(combinedAnswers);
+      const data = await createProfileSummary(answers);
 
       if (data) {
         console.log(data);
-        setProfileSummary(data);
+        setProfileSummary(data?.profileSummary);
         // Redirect to profile summary page
         navigate('/profile-summary');
       } else {
-        toast.error("Api failed: No data recieved.");
+        toast.error("Api failed: No data received.");
         navigate('/generate-profile');
       }
 
@@ -82,7 +130,6 @@ const CreateProfile: React.FC = () => {
     } finally {
       setLoading(false);
     }
-
   };
 
   if (loading) {
@@ -96,7 +143,7 @@ const CreateProfile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 flex items-center justify-center select-none">
       <div className="w-full max-w-2xl">
 
         {/* Header & Progress */}
@@ -128,7 +175,7 @@ const CreateProfile: React.FC = () => {
           <div className="space-y-4 mb-8">
 
             {/* Radio Options */}
-            {currentQuestion.type === 'radio' && currentQuestion.options && (
+            {currentQuestion.type === 'RADIO' && currentQuestion.options && (
               <div className="space-y-3">
                 {currentQuestion.options.map((option) => (
                   <label
@@ -163,7 +210,7 @@ const CreateProfile: React.FC = () => {
             )}
 
             {/* Dropdown Select */}
-            {currentQuestion.type === 'select' && currentQuestion.options && (
+            {currentQuestion.type === 'SELECT' && currentQuestion.options && (
               <select
                 value={answers[currentQuestion.id] || ''}
                 onChange={(e) => handleAnswer(e.target.value)}
@@ -179,7 +226,7 @@ const CreateProfile: React.FC = () => {
             )}
 
             {/* Text Area */}
-            {currentQuestion.type === 'text' && (
+            {currentQuestion.type === 'TEXT' && (
               <textarea
                 value={answers[currentQuestion.id] || ''}
                 onChange={(e) => handleAnswer(e.target.value)}

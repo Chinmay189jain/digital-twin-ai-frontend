@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Bot } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
-import { getChatHistory, getChatResponse } from '../../api/chatApi';
+import { getChatHistory, getChatResponse, clearChatSessionsCache } from '../../api/chatApi';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import { UseSpeechRecognition } from './UseSpeechRecognition';
@@ -159,6 +159,8 @@ const Chat: React.FC = () => {
 
       // If a new session was created, update URL (no reload)
       if (!sessionId || !sessionId.trim()) {
+        //clearing old session cache for layout update
+        clearChatSessionsCache();
         navigate(`/chat/${data.sessionId}`, { replace: true });
       }
 
@@ -196,19 +198,19 @@ const Chat: React.FC = () => {
 
   const handleTextareaChange = useCallback(
     (value: string) => {
-    setUserText(value);
-    resizeTextarea(value);
+      setUserText(value);
+      resizeTextarea(value);
     },
     [resizeTextarea]
   );
 
   const handleSuggestedQuestion = useCallback(
     (question: string) => {
-    setUserText(question);
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-      resizeTextarea(question);
-    }
+      setUserText(question);
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        resizeTextarea(question);
+      }
     },
     [resizeTextarea]
   );
@@ -230,7 +232,12 @@ const Chat: React.FC = () => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-gray-50 dark:bg-gray-900 [scrollbar-width:thin]">
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-gray-50 dark:bg-gray-900 
+        [&::-webkit-scrollbar]:w-1.5
+        [&::-webkit-scrollbar-track]:bg-transparent
+        [&::-webkit-scrollbar-thumb]:bg-gray-500
+        [&::-webkit-scrollbar-thumb]:rounded-full
+        hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <LoadingSpinner />

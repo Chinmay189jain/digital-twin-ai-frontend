@@ -48,6 +48,11 @@ export const getAllChatSessions = async (searchQuery: string, signal?: AbortSign
   return response.data;
 }
 
+// Clearing old chat session for layout update
+export const clearChatSessionsCache = () => {
+  cache.clear();
+};
+
 // Delete a Chat Session
 export const deleteChatSession = async (sessionId: string) => {
   const response = await api.delete(`twin/chat/session/${sessionId}`);

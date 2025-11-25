@@ -36,10 +36,19 @@ export const PROFILE_SUMMARY = {
   SUMMARY_BUTTON: "Ask Your Twin"
 }
 
+//EDIT PROFILE TEXT
+export const EDIT_PROFILE = {
+  HEADING: "Edit Your Profile",
+  SUB_HEADING: "Update your responses to regenerate your Digital Twin with new insights.",
+  SAVE_BUTTON: "Save & Regenerate Twin"
+}
+
 //LAYOUT SUMMARY TEXT
 export const NAVBAR_LAYOUT = {
   HEADING: "TwinAI",
-  NEW_CHAT: "New Chat"
+  NEW_CHAT: "New Chat",
+  SIGN_OUT: "Sign out",
+  RECENT_CHATS: "Recent chats"
 }
 
 // CHATS

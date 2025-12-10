@@ -1,3 +1,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .custom-scrollbar {
+    overflow-y: auto;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 0.375rem; /* w-1.5 */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background-color: transparent; /* bg-transparent */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgb(107 114 128); /* bg-gray-500 */
+    border-radius: 9999px; /* rounded-full */
+  }
+
+  .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: rgb(156 163 175); /* hover:bg-gray-400 */
+  }
+
+  /* (Optional) Firefox support */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(107 114 128) transparent;
+  }
+}

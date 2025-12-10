@@ -15,9 +15,9 @@ const ProfileSummary: React.FC = () => {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const profileData = await getProfileSummary();
-        if(profileData?.profileSummary){
-          setProfileSummary(profileData.profileSummary);
+        const profileSummary = await getProfileSummary();
+        if(profileSummary){
+          setProfileSummary(profileSummary);
         } else {
           toast.error('No profile summary found. Please generate it first.');
           navigate('/generate-profile');
@@ -50,8 +50,6 @@ const ProfileSummary: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
             {PROFILE_SUMMARY.SUMMARY_HEADING}
           </h1>
-
-          {/* <DisplaySummary profileSummary={profileSummary} /> */}
 
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg p-6 mb-8">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">

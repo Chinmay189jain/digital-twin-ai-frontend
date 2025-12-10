@@ -72,8 +72,28 @@ export const HISTORY = {
   EMPTY_SESSION_TITLE : "Try adjusting your search terms.",
   SEARCH_SESSION_HEADING: "No conversations found",
   SEARCH_SESSION_TITLE: "Start chatting with your Digital Twin to see your conversation history here.",
-  DIALOG_HEADING: "Delete chat 😬",
+  DIALOG_HEADING: "Delete chat❗",
   DIALOG_TITLE: "Are you sure you want to delete this conversation ?",
   DIALOG_BUTTON_YES: "Delete",
   DIALOG_BUTTON_NO: "Cancel"
+}
+
+// SETTINGS
+export const SETTINGS = {
+  HEADING: "Settings",
+  TITLE: "Manage your account preferences and security settings",
+  ACCOUNT_HEADING: "Account Information",
+  ACCOUNT_TITLE: "Email Address",
+  SECURITY_HEADING: "Security",
+  SECURITY_PASSWORD_TITLE: "Password",
+  SECURITY_PASSWORD_MESSAGE: "Change your account password",
+  BUTTON_CHANGE_PASSWORD: "Change Password",
+  DELETE_ACCOUNT_HEADING: "Danger Zone",
+  DELETE_ACCOUNT_TITLE: "Delete Account",
+  DELETE_ACCOUNT_TEXT: "Permanently delete your account and all associated data. This action cannot be undone.",
+  DELETE_ACCOUNT_BUTTON: "Delete Account",
+  DIALOG_HEADING: "Delete your account ❌",
+  DIALOG_TITLE: "If you continue, we will permanently delete all data. You won’t be able to recover this data later.",
+  DIALOG_CANCEL: "Cancel",
+  DIALOG_CONFIRM: "Confirm"
 }

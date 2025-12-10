@@ -9,7 +9,7 @@ import { HISTORY } from '../constants/text';
 export interface ChatSession {
     id: string;
     title: string;
-    messageCount: number; 
+    messageCount: number;
     updatedAt: string;
 }
 
@@ -51,7 +51,7 @@ const formatTime = (timestamp: string): string => {
 
 // Memoized session item component
 const ChatSessionItem = React.memo<{ session: ChatSession, onDelete: (id: string) => void; }>(({ session, onDelete }) => {
-    
+
     const handleDeleteClick = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -122,7 +122,7 @@ const History: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
-    
+
     // Use ref to store previous sessions for rollback
     const prevSessionsRef = useRef<ChatSession[]>([]);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -186,7 +186,7 @@ const History: React.FC = () => {
 
         // Store snapshot for rollback
         prevSessionsRef.current = filteredSession;
-        
+
         // Optimistically update UI
         const updatedSessions = filteredSession.filter(s => s.id !== sessionToDelete);
         setFilteredSession(updatedSessions);
@@ -194,6 +194,7 @@ const History: React.FC = () => {
         try {
             await deleteChatSession(sessionToDelete);
             toast.success('Conversation deleted');
+            window.dispatchEvent(new Event('chatSessionsUpdated'));
 
             // Refresh data to ensure consistency
             await fetchChatSessions(searchQuery);
@@ -232,7 +233,7 @@ const History: React.FC = () => {
     ), [filteredSession, handleDeleteClick]);
 
     return (
-        <div className="h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4 overflow-y-auto">
+        <div className="h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4 custom-scrollbar">
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
@@ -271,11 +272,11 @@ const History: React.FC = () => {
 
                 {/* Delete Confirmation Dialog */}
                 {showDeleteDialog && (
-                    <div 
+                    <div
                         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
                         onClick={handleCancelDelete}
                     >
-                        <div 
+                        <div
                             className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm w-full mx-4"
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -296,7 +297,7 @@ const History: React.FC = () => {
                                     onClick={handleConfirmDelete}
                                     className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                                 >
-                                   {HISTORY.DIALOG_BUTTON_YES}
+                                    {HISTORY.DIALOG_BUTTON_YES}
                                 </button>
                             </div>
                         </div>

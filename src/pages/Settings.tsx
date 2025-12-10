@@ -1,13 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Trash2, Moon, Sun, Shield } from 'lucide-react';
 import { useAuth } from "../context/AuthContext";
+import toast from 'react-hot-toast';
+import { deleteAccount } from '../api/authApi';
+import { SETTINGS } from '../constants/text';
 
 const Settings: React.FC = () => {
   const { user } = useAuth();
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const navigate = useNavigate();
 
-  const handleDeleteAccount = () => {
+  const handleCancelDelete = useCallback(() => {
+    setShowDeleteConfirmDialog(false);
+  }, []);
+
+  const handleDeleteAccount = async () => {
     // This would normally make an API call to delete the account
+    try {
+      await deleteAccount();
+      toast.success('Account deleted');
+      localStorage.removeItem("token");
+      navigate("/");
+    } catch(err){
+      console.error(err);
+      toast.error('Failed to delete account');
+    } finally {
+      setShowDeleteConfirmDialog(false);
+    }
   };
 
   const handleChangePassword = () => {
@@ -15,15 +35,15 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4 overflow-y-auto">
+    <div className="h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4 custom-scrollbar">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Settings
+            {SETTINGS.HEADING}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Manage your account preferences and security settings
+            {SETTINGS.TITLE}
           </p>
         </div>
 
@@ -32,13 +52,13 @@ const Settings: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
               <User className="w-5 h-5 mr-2" />
-              Account Information
+              {SETTINGS.ACCOUNT_HEADING}
             </h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Email Address
+                  {SETTINGS.ACCOUNT_TITLE}
                 </label>
                 <div className="flex items-center">
                   <Mail className="w-5 h-5 text-gray-400 mr-3" />
@@ -57,19 +77,19 @@ const Settings: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
               <Shield className="w-5 h-5 mr-2" />
-              Security
+              {SETTINGS.SECURITY_HEADING}
             </h2>
-            
+
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <Lock className="w-5 h-5 text-gray-400 mr-3" />
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white">
-                      Password
+                      {SETTINGS.SECURITY_PASSWORD_TITLE}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Change your account password
+                      {SETTINGS.SECURITY_PASSWORD_MESSAGE}
                     </p>
                   </div>
                 </div>
@@ -77,7 +97,7 @@ const Settings: React.FC = () => {
                   onClick={handleChangePassword}
                   className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg transition-colors duration-200"
                 >
-                  Change Password
+                  {SETTINGS.BUTTON_CHANGE_PASSWORD}
                 </button>
               </div>
             </div>
@@ -87,43 +107,55 @@ const Settings: React.FC = () => {
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
             <h2 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-4 flex items-center">
               <Trash2 className="w-5 h-5 mr-2" />
-              Danger Zone
+              {SETTINGS.DELETE_ACCOUNT_HEADING}
             </h2>
-            
+
             <div className="space-y-4">
               <div>
                 <p className="text-red-800 dark:text-red-200 mb-2">
-                  Delete Account
+                  {SETTINGS.DELETE_ACCOUNT_TITLE}
                 </p>
                 <p className="text-sm text-red-600 dark:text-red-300 mb-4">
-                  Permanently delete your account and all associated data. This action cannot be undone.
+                  {SETTINGS.DELETE_ACCOUNT_TEXT}
                 </p>
-                
-                {!showDeleteConfirm ? (
-                  <button
-                    onClick={() => setShowDeleteConfirm(true)}
+
+                <button
+                    onClick={() => setShowDeleteConfirmDialog(true)}
                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+                >
+                  {SETTINGS.DELETE_ACCOUNT_BUTTON}
+                </button>
+
+                {/* Delete Confirmation Dialog */}
+                {showDeleteConfirmDialog && (
+                  <div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                    onClick={handleCancelDelete}
                   >
-                    Delete Account
-                  </button>
-                ) : (
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                      Are you absolutely sure? This will permanently delete your account.
-                    </p>
-                    <div className="flex space-x-3">
-                      <button
-                        onClick={handleDeleteAccount}
-                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
-                      >
-                        Yes, Delete Account
-                      </button>
-                      <button
-                        onClick={() => setShowDeleteConfirm(false)}
-                        className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg transition-colors duration-200"
-                      >
-                        Cancel
-                      </button>
+                    <div
+                      className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm w-full mx-4"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                        {SETTINGS.DIALOG_HEADING}
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-6">
+                        {SETTINGS.DIALOG_TITLE}
+                      </p>
+                      <div className="flex justify-end space-x-4">
+                        <button
+                          onClick={handleCancelDelete}
+                          className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        >
+                          {SETTINGS.DIALOG_CANCEL}
+                        </button>
+                        <button
+                          onClick={handleDeleteAccount}
+                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                        >
+                          {SETTINGS.DIALOG_CONFIRM}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

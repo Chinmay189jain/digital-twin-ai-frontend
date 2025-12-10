@@ -107,7 +107,7 @@ const EditProfile: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 overflow-y-auto">
+    <div className="h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 custom-scrollbar">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -154,11 +154,10 @@ const EditProfile: React.FC = () => {
 
                               {/* Custom purple circle via Tailwind classes */}
                               <div
-                                className={`w-4 h-4 mt-1 mr-3 rounded-full border-2 flex items-center justify-center transition-colors duration-200 ${
-                                  isSelected
+                                className={`w-4 h-4 mt-1 mr-3 rounded-full border-2 flex items-center justify-center transition-colors duration-200 ${isSelected
                                     ? 'border-violet-500 bg-violet-500'
                                     : 'border-gray-300 bg-transparent'
-                                }`}
+                                  }`}
                               >
                                 {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
                               </div>
@@ -205,10 +204,9 @@ const EditProfile: React.FC = () => {
                   onClick={handleSave}
                   disabled={!hasChanges || loading}
                   className={`flex items-center px-6 py-2 rounded-lg text-white transition-colors duration-200
-                    ${
-                      !hasChanges || loading
-                        ? 'bg-indigo-400 cursor-not-allowed'
-                        : 'bg-indigo-600 hover:bg-indigo-700'
+                    ${!hasChanges || loading
+                      ? 'bg-indigo-400 cursor-not-allowed'
+                      : 'bg-indigo-600 hover:bg-indigo-700'
                     }`}
                 >
                   <Save className="w-4 h-4 mr-2" />

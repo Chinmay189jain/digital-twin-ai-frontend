@@ -110,9 +110,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   useEffect(() => {
     const controller = new AbortController();
 
-    const loadChats = async () => {
+    const loadChats = async (signal?: AbortSignal) => {
       try {
-        const data = await getAllChatSessions("", controller.signal);
+        const data = await getAllChatSessions("", signal);
         if (controller.signal.aborted) return;
 
         const mapped: RecentChat[] = (data || [])
@@ -131,10 +131,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       }
     };
 
-    loadChats();
+    // initial load (with abort support)
+    loadChats(controller.signal);
+
+    // re-load when history deleted or session updated
+    const handleSessionsUpdated = () => {
+      loadChats(); 
+    };
+
+    window.addEventListener("chatSessionsUpdated", handleSessionsUpdated);
 
     return () => {
       controller.abort();
+      window.removeEventListener("chatSessionsUpdated", handleSessionsUpdated);
     };
   }, [location.pathname]);
 
@@ -280,12 +289,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
 
               <div
-                className="mt-2 pb-2 max-h-64 overflow-y-auto pr-1 space-y-1
-                [&::-webkit-scrollbar]:w-1.5
-                [&::-webkit-scrollbar-track]:bg-transparent
-                [&::-webkit-scrollbar-thumb]:bg-gray-500
-                [&::-webkit-scrollbar-thumb]:rounded-full
-                hover:[&::-webkit-scrollbar-thumb]:bg-gray-400"
+                className="mt-2 pb-2 max-h-64 pr-1 space-y-1"
               >
                 {recentChats.map((chat) => {
                   const isActive = chat.id === activeChatId;

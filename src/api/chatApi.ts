@@ -29,8 +29,11 @@ export const getChatResponse = async (sessionId: string | undefined, userQuestio
 };
 
 // Get Chat History
-export const getChatHistory = async (sessionId: string) => {
-  const response = await api.get(`twin/chat/${sessionId}`);
+export const getChatHistory = async (sessionId: string, page = 0, size = 30) => {
+  const response = await api.get(`twin/chat/${sessionId}`, {
+    params: {page, size}
+  });
+  // { messages: Message[], hasMore: boolean }
   return response.data;
 };
 

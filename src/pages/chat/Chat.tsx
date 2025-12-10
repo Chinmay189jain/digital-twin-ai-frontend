@@ -1,4 +1,3 @@
-// src/pages/chat/Chat.tsx
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from "react-router-dom";
 import { Bot } from 'lucide-react';
@@ -30,6 +29,14 @@ const Chat: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
+
+  // pagination state
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // ref for scrollable container
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
   // animating the last AI message
   const [isStreaming, setIsStreaming] = useState(false);
@@ -68,42 +75,50 @@ const Chat: React.FC = () => {
     });
   }, [resizeTextarea, setOnFinalTranscript]);
 
-  // Load chat history for this session
+  // Load initial chat history for this session (latest page)
   useEffect(() => {
     (async () => {
       try {
         setIsLoading(true);
+        setPage(0);           // reset page when session changes
+        setHasMore(false);    // reset hasMore
         if (sessionId && sessionId.trim()) {
-          const data = await getChatHistory(sessionId);
-          setMessages(Array.isArray(data) ? data : []);
+          const data = await getChatHistory(sessionId, 0, 30);
+          setMessages(Array.isArray(data.messages) ? data.messages : []);
+          setHasMore(!!data.hasMore);
         } else {
           // New chat: no history yet
           setMessages([]);
+          setHasMore(false);
         }
+        // reset count ref so we treat this as "first render" for scroll-to-bottom
+        prevCountRef.current = 0;
       } catch (error) {
         console.error('Failed to load chats:', error);
         toast.error('Failed to load chats');
         setMessages([]);
+        setHasMore(false);
       } finally {
         setIsLoading(false);
       }
     })();
-  }, [setMessages, sessionId]);
+  }, [sessionId]);
 
-  // Scroll to latest only when a new message is added 
+  // Scroll to latest only when a new message is added at the bottom
   const prevCountRef = useRef<number>(0);
   useEffect(() => {
     if (messages.length === 0) return;
 
     if (prevCountRef.current === 0) {
-      // first mount / navigation / refresh: jump
+      // first mount / navigation / refresh: jump to bottom
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
-    } else if (messages.length > prevCountRef.current) {
-      // on new message: smooth
+    } else if (messages.length > prevCountRef.current && !isLoadingMore) {
+      // new message appended at bottom: smooth scroll
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
+
     prevCountRef.current = messages.length;
-  }, [messages]);
+  }, [messages, isLoadingMore]);
 
   // Typewriter animation for the last AI message
   // speedMs: delay per tick; step: chars revealed per tick
@@ -132,6 +147,59 @@ const Chat: React.FC = () => {
     tick();
   }, []);
 
+  // Load older messages when user scrolls to top
+  const handleLoadOlder = useCallback(async () => {
+    if (!sessionId || !sessionId.trim() || !hasMore || isLoadingMore) return;
+
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    try {
+      setIsLoadingMore(true);
+
+      // Save current scroll heights BEFORE adding older messages
+      const prevScrollHeight = container.scrollHeight;
+      const prevScrollTop = container.scrollTop;
+
+      const nextPage = page + 1;
+      const data = await getChatHistory(sessionId, nextPage, 30);
+
+      setMessages(prev => {
+        if (!Array.isArray(data.messages) || data.messages.length === 0) {
+          return prev;
+        }
+        // Prepend older messages at the top
+        return [...data.messages, ...prev];
+      });
+
+      setPage(nextPage);
+      setHasMore(!!data.hasMore);
+
+      // After DOM updates, adjust scroll so user stays at same visible position
+      requestAnimationFrame(() => {
+        const newScrollHeight = container.scrollHeight;
+        const heightDiff = newScrollHeight - prevScrollHeight;
+        container.scrollTop = prevScrollTop + heightDiff;
+      });
+    } catch (error) {
+      console.error('Failed to load older messages:', error);
+      toast.error('Failed to load older messages');
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [sessionId, hasMore, isLoadingMore, page]);
+
+  // Scroll handler: detect when we're near the top
+  const handleScroll = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container || isLoadingMore || !hasMore) return;
+
+    const THRESHOLD = 120; // px from top; adjust if needed
+    if (container.scrollTop <= THRESHOLD) {
+      handleLoadOlder();
+    }
+  }, [isLoadingMore, hasMore, handleLoadOlder]);
+
   // Handlers
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -159,7 +227,7 @@ const Chat: React.FC = () => {
 
       // If a new session was created, update URL (no reload)
       if (!sessionId || !sessionId.trim()) {
-        //clearing old session cache for layout update
+        // clearing old session cache for layout update
         clearChatSessionsCache();
         navigate(`/chat/${data.sessionId}`, { replace: true });
       }
@@ -225,19 +293,22 @@ const Chat: React.FC = () => {
             <Bot className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">{CHATS.NAVBAR_HEADING}</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{CHATS.NAVBAR_TITLE}</p>
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {CHATS.NAVBAR_HEADING}
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {CHATS.NAVBAR_TITLE}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-gray-50 dark:bg-gray-900 
-        [&::-webkit-scrollbar]:w-1.5
-        [&::-webkit-scrollbar-track]:bg-transparent
-        [&::-webkit-scrollbar-thumb]:bg-gray-500
-        [&::-webkit-scrollbar-thumb]:rounded-full
-        hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="custom-scrollbar flex-1 px-6 py-4 space-y-4 bg-gray-50 dark:bg-gray-900"
+      >
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <LoadingSpinner />
@@ -252,7 +323,6 @@ const Chat: React.FC = () => {
             endRef={messagesEndRef}
           />
         )}
-
       </div>
 
       {/* Input */}

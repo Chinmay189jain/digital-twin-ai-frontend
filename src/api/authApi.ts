@@ -21,3 +21,9 @@ export const register = async ({ username, email, password }: AuthFormData) => {
   });
   return response.data;
 };
+
+// Delete account
+export const deleteAccount = async () => {
+  const response = await api.delete('/account/delete');
+  return response.data;
+};

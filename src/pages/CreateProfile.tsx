@@ -115,7 +115,7 @@ const CreateProfile: React.FC = () => {
 
       if (data) {
         console.log(data);
-        setProfileSummary(data?.profileSummary);
+        setProfileSummary(data);
         // Redirect to profile summary page
         navigate('/profile-summary');
       } else {

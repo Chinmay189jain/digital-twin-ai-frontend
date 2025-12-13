@@ -98,7 +98,7 @@ const DropdownMenu = React.memo<{
 DropdownMenu.displayName = "DropdownMenu";
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -184,7 +184,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const handleLogout = useCallback(() => {
     setDropdownOpen(false);
-    localStorage.removeItem("token");
+    logout();
     navigate("/");
   }, [navigate]);
 

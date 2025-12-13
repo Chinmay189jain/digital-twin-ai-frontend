@@ -1,3 +1,15 @@
+//HOME TEXT
+export const HOME_TEXT  = {
+  HEADING: "TwinAI",
+  TITLE: "Your Digital Twin • AI assistant based on your personality profile",
+  TOP_MESSAGE: "Launching TwinAI — Your personalized AI assistant. Experience intelligent conversations.",
+  BUTTON: "Sign In",
+  BOX_HEADING: "Start Now",
+  BOX_TITLE_ONE: "Free access to TwinAI.",
+  BOX_TITLE_TWO: "Experience your personalized digital twin.",
+  CHAT_BUTTON: "Start Chatting",
+};
+
 //LOGIN TEXT
 export const LOGIN_TEXT  = {
   TITLE: "Welcome back",

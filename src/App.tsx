@@ -10,6 +10,7 @@ import Chat from './pages/chat/Chat';
 import History from './pages/History';
 import EditProfile from './pages/EditProfile';
 import  Settings  from './pages/Settings';
+import Home from './pages/Home';
 
 function App() {
   return (
@@ -18,7 +19,8 @@ function App() {
         <Router>
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<AuthPage />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/auth" element={<AuthPage />} />
 
             {/* Protected Routes */}
             <Route element={<PrivateRoute />}>

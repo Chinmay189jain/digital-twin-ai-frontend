@@ -5,6 +5,8 @@ import { login, register } from '../api/authApi';
 import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import toast from 'react-hot-toast';
+import { decodeToken } from '../utils/jwtUtils';
+import { useAuth } from "../context/AuthContext";
 
 // Define the shape of form data
 interface AuthFormData {
@@ -23,6 +25,7 @@ interface FormErrors {
 const AuthPage: React.FC = () => {
 
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   // State for showing/hiding password
   const [showPassword, setShowPassword] = useState(false);
@@ -104,6 +107,12 @@ const AuthPage: React.FC = () => {
       if (data?.token) {
         localStorage.setItem("token", data.token);
 
+        const decoded: any = decodeToken(data.token);
+        setUser({
+          email: decoded.sub,
+          name: decoded.username ?? "",
+        });
+
         // Redirect to chat after login
         navigate('/chat');
       } else {
@@ -122,6 +131,12 @@ const AuthPage: React.FC = () => {
       if (data?.token) {
         localStorage.setItem("token", data.token);
         toast.success("Account created!");
+
+        const decoded: any = decodeToken(data.token);
+        setUser({
+          email: decoded.sub,
+          name: decoded.username ?? "",
+        });
 
         //navigate to CreateProfile for generating profile summary
         navigate('/generate-profile');
@@ -167,7 +182,7 @@ const AuthPage: React.FC = () => {
             {/* Username field - only for registration */}
             {!isLogin && (
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Full Name
                 </label>
                 <div className="mt-1 relative">

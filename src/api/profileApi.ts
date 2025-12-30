@@ -33,8 +33,6 @@ export const getProfileQuestion = async () => {
 // Create Profile Summary (No caching because data changes)
 export const createProfileSummary = async (profileAnswers: Record<number, string>) => {
   const response = await api.post('ai/generate-profile', profileAnswers);
-  // Refresh the profile summary cache
-  setCache('profile_summary', response.data);
   return response.data;
 };
 

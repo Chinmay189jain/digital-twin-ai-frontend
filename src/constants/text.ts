@@ -27,6 +27,27 @@ export const REGISTER_TEXT = {
   BOTTOM_MESSAGE: "Already have an account?"
 };
 
+// EMAIL VERIFICATION
+export const EMAIL_VERIFICATION_TEXT = {
+  FORGOT_PASSWORD: {
+    TITLE: "Reset Your Password",
+    DESCRIPTION: "Enter your email address and we'll send you a verification code to reset your password",
+    BUTTON_TEXT: "Send Reset Code",
+  },
+  VERIFY_EMAIL: {
+    TITLE: "Verify Your Account",
+    DESCRIPTION: "Check the email below and we’ll send you a verification code to complete your account verification",
+    BUTTON_TEXT: "Send Verification Code",
+  },
+  CODE_VERIFY: {
+    TITLE: "Check your email",
+    DESCRIPTION: "We’ve sent a 6-digit code to",
+    BOTTOM_TEXT_ONE: "If you still don’t see the email, check Spam/Promotions folder",
+    BOTTOM_TEXT_TWO: "It may take a few moments to arrive",
+    CODE_NOT_RECIEVED: "Didn’t receive the code?"
+  }
+};
+
 //FORM ERROR
 export const FORM_ERROR = {
   USERNAME: "name is required",

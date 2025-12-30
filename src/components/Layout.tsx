@@ -11,8 +11,10 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useTwin } from '../context/TwinContext';
 import { NAVBAR_LAYOUT } from "../constants/text";
 import { getAllChatSessions } from "../api/chatApi";
+import { getProfileSummary } from '../api/profileApi';
 
 type LinkState = {
   isActive: boolean;
@@ -99,8 +101,32 @@ DropdownMenu.displayName = "DropdownMenu";
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
+  const { profileSummary, setProfileSummary } = useTwin();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Redirect to generate-profile if profileSummary is empty
+  useEffect(() => {
+    const checkAndLoadProfile = async () => {
+      if (profileSummary === "") {
+        try {
+          const data = await getProfileSummary();
+          if (data && data.profileSummary) {
+            setProfileSummary(data.profileSummary);
+            // No need to redirect, profile summary exists
+          } else {
+            // No profile summary found, redirect to generate
+            navigate("/generate-profile", { replace: true });
+          }
+        } catch (error) {
+          console.error("Failed to fetch profile summary:", error);
+          navigate("/generate-profile", { replace: true });
+        }
+      }
+    };
+
+    checkAndLoadProfile();
+  }, [profileSummary, navigate]);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -136,7 +162,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
     // re-load when history deleted or session updated
     const handleSessionsUpdated = () => {
-      loadChats(); 
+      loadChats();
     };
 
     window.addEventListener("chatSessionsUpdated", handleSessionsUpdated);

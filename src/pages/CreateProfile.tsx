@@ -110,11 +110,9 @@ const CreateProfile: React.FC = () => {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-
       const data = await createProfileSummary(answers);
 
       if (data) {
-        console.log(data);
         setProfileSummary(data);
         // Redirect to profile summary page
         navigate('/profile-summary');

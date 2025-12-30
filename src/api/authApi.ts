@@ -22,6 +22,18 @@ export const register = async ({ username, email, password }: AuthFormData) => {
   return response.data;
 };
 
+// send opt
+export const sendOtp = async () => {
+  const response = await api.post('/account/verify/send');
+  return response;
+};
+
+// confirm otp
+export const confirmOtp = async (otp: string) => {
+  const response = await api.post('/account/verify/confirm', otp);
+  return response.data;
+};
+
 // Delete account
 export const deleteAccount = async () => {
   const response = await api.delete('/account/delete');

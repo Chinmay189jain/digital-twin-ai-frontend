@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { useTwin } from '../context/TwinContext';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { getProfileSummary } from '../api/profileApi';
@@ -9,20 +8,18 @@ import { PROFILE_SUMMARY } from '../constants/text';
 const ProfileSummary: React.FC = () => {
   const navigate = useNavigate();
   const { profileSummary, setProfileSummary } = useTwin();
-  const { user } = useAuth();
 
   // Redirect to /generate-profile if summary is missing
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const profileSummary = await getProfileSummary();
-        if(profileSummary){
-          setProfileSummary(profileSummary);
+        const data = await getProfileSummary();
+        if(data && data.profileSummary){
+          setProfileSummary(data.profileSummary);
         } else {
           toast.error('No profile summary found. Please generate it first.');
           navigate('/generate-profile');
         }
-        console.log(user);
       } catch(error: any){
         console.error("Failed to fetch profile summary:", error);
         toast.error('Failed to fetch profile summary.');

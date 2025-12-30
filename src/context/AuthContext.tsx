@@ -3,6 +3,7 @@ import { decodeToken } from '../utils/jwtUtils';
 interface AuthUser {
   email?: string;
   name?: string;
+  verified: boolean;
 }
 
 interface AuthContextType {
@@ -49,6 +50,7 @@ const buildInitialUser = (): AuthUser | null => {
     return {
       email: decoded.sub,
       name: decoded.username ?? "",
+      verified: decoded.verified || false
     };
   } catch (e) {
     console.error("Failed to decode token", e);

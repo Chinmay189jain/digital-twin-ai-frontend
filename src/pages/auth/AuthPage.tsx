@@ -1,12 +1,12 @@
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import { BrainCog, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
-import { LOGIN_TEXT, REGISTER_TEXT, FORM_ERROR } from "../constants/text";
-import { login, register } from '../api/authApi';
+import { LOGIN_TEXT, REGISTER_TEXT, FORM_ERROR } from "../../constants/text";
+import { login, register } from '../../api/authApi';
 import { useNavigate } from 'react-router-dom';
-import { LoadingSpinner } from "../components/LoadingSpinner";
+import { LoadingSpinner } from "../../components/LoadingSpinner";
 import toast from 'react-hot-toast';
-import { decodeToken } from '../utils/jwtUtils';
-import { useAuth } from "../context/AuthContext";
+import { decodeToken } from '../../utils/jwtUtils';
+import { useAuth } from "../../context/AuthContext";
 
 // Define the shape of form data
 interface AuthFormData {
@@ -103,14 +103,15 @@ const AuthPage: React.FC = () => {
   // Placeholder login API
   const handleLogin = async (credentials: AuthFormData) => {
     try {
-      const data = await login(credentials);
-      if (data?.token) {
-        localStorage.setItem("token", data.token);
+      const response = await login(credentials);
+      if (response?.token) {
+        localStorage.setItem("token", response.token);
 
-        const decoded: any = decodeToken(data.token);
+        const decoded: any = decodeToken(response.token);
         setUser({
           email: decoded.sub,
           name: decoded.username ?? "",
+          verified: decoded.verified || false
         });
 
         // Redirect to chat after login
@@ -127,19 +128,20 @@ const AuthPage: React.FC = () => {
   // Placeholder register API
   const handleRegister = async (credentials: AuthFormData) => {
     try {
-      const data = await register(credentials);
-      if (data?.token) {
-        localStorage.setItem("token", data.token);
-        toast.success("Account created!");
+      const response = await register(credentials);
+      if (response?.token) {
+        localStorage.setItem("token", response.token);
 
-        const decoded: any = decodeToken(data.token);
+        const decoded: any = decodeToken(response.token);
         setUser({
           email: decoded.sub,
           name: decoded.username ?? "",
+          verified: decoded.verified || false
         });
 
-        //navigate to CreateProfile for generating profile summary
-        navigate('/generate-profile');
+        localStorage.setItem("twin-email-verification", "true");
+        //navigate to account verification
+        navigate('/account/verify');
       } else {
         toast.error("Registration failed: No token received.");
       }
@@ -157,7 +159,7 @@ const AuthPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br select-none from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br select-none from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center py-2 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
 
         {/* Heading section */}
@@ -304,6 +306,7 @@ const AuthPage: React.FC = () => {
                 </button>
               </span>
             </div>
+            
           </form>
         </div>
       </div>

@@ -3,8 +3,7 @@ import AuthPage from './pages/auth/AuthPage';
 import CreateProfile from './pages/CreateProfile';
 import { Toaster } from 'react-hot-toast';
 import { PrivateRoute } from './routes/PrivateRoute';
-import { ProtectedRoute } from './routes/ProtectedRoute';
-import { AuthRoute } from './routes/AuthRoute';
+import { GuestOnlyRoute } from './routes/GuestOnlyRoute';
 import GlobalContextProvider from './context/GlobalContextProvider';
 import ProfileSummary from './pages/ProfileSummary';
 import Layout from './components/Layout';
@@ -15,6 +14,7 @@ import Settings from './pages/Settings';
 import Home from './pages/Home';
 import EmailVerification from './pages/auth/EmailVerification';
 import RequestEmailVerification from './pages/auth/RequestEmailVerification';
+import PasswordChangePage from './pages/auth/PasswordChange';
 
 function App() {
   return (
@@ -24,16 +24,13 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
+            <Route path='/change/password' element={<PasswordChangePage />} />
+            <Route path='/user/email' element={<RequestEmailVerification />} />
+            <Route path="/account/verify" element={<EmailVerification />} />
 
-            {/* Auth Routes */}
-            <Route element={<AuthRoute />}>
+            {/* Guest Only Routes */}
+            <Route element={<GuestOnlyRoute />}>
               <Route path="/auth" element={<AuthPage />} />
-              <Route path='/user/email' element={<RequestEmailVerification />} />
-            </Route>
-
-            {/* Protected Routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/account/verify" element={<EmailVerification />} />
             </Route>
 
             {/* Private Routes */}

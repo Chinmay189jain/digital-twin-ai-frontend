@@ -6,13 +6,13 @@ interface AuthFormData {
   password: string;
 }
 
-// Login API
+// login api call
 export const login = async ({ email, password }: AuthFormData) => {
   const response = await api.post('/auth/login', { email, password });
   return response.data;
 };
 
-// Register API
+// register api call
 export const register = async ({ username, email, password }: AuthFormData) => {
   const response = await api.post('/auth/register', {
     name: username,
@@ -22,19 +22,18 @@ export const register = async ({ username, email, password }: AuthFormData) => {
   return response.data;
 };
 
-// send opt
-export const sendOtp = async () => {
+// send otp for account verification api call
+export const requestAccountVerificationOtp = async () => {
   const response = await api.post('/account/verify/send');
   return response;
 };
 
-// confirm otp
-export const confirmOtp = async (otp: string) => {
+// confirm otp for account verification api call
+export const verifyAccountVerificationOtp = async (otp: string) => {
   const response = await api.post('/account/verify/confirm', otp);
   return response.data;
 };
 
-// Delete account
 export const deleteAccount = async () => {
   const response = await api.delete('/account/delete');
   return response.data;

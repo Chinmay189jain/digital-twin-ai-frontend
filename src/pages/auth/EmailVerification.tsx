@@ -1,11 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, ChangeEvent, FormEvent } from "react";
 import { Mail, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { sendOtp, confirmOtp } from "../../api/authApi";
+import { requestAccountVerificationOtp, verifyAccountVerificationOtp } from "../../api/authApi";
+import { requestPasswordResetOtp, verifyPasswordResetOtp } from "../../api/passwordResetApi"; 
 import { decodeToken } from "../../utils/jwtUtils";
 import { EMAIL_VERIFICATION_TEXT } from "../../constants/text";
+
+type VerifyMode = "VERIFY_EMAIL" | "FORGOT_PASSWORD";
 
 const OTP_LEN = 6;
 const RESEND_SECONDS = 300;
@@ -17,8 +20,40 @@ function formatTime(seconds: number) {
 }
 
 const EmailVerification: React.FC = () => {
-  const navigate = useNavigate();
   const { user, setUser } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const state = location.state as { email?: string; mode?: VerifyMode } | null;
+  const mode = state?.mode;
+
+  // For VERIFY_EMAIL, use logged in user's email
+  // For FORGOT_PASSWORD, use state email
+  const email = useMemo(() => {
+    if (mode === "VERIFY_EMAIL") return user?.email ?? "";
+    if (mode === "FORGOT_PASSWORD") return state?.email ?? "";
+    return "";
+  }, [mode, user?.email, state?.email]);
+
+  // If opened directly without required context, redirect to the home page
+  useEffect(() => {
+    // No mode, user directly opened the page
+    if (!mode) {
+      navigate("/", { replace: true });
+      return;
+    }
+
+    // VERIFY_EMAIL requires logged-in user and unverified state
+    if (mode === "VERIFY_EMAIL" && (!user?.email || user?.verified)) {
+      navigate("/auth", { replace: true });
+      return;
+    }
+
+    // FORGOT_PASSWORD requires an email passed from previous screen
+    if (mode === "FORGOT_PASSWORD" && !state?.email) {
+      navigate("/auth", { replace: true }); 
+    }
+  }, [mode, user?.email, user?.verified, state?.email, navigate]);
 
   const [verificationCode, setVerificationCode] = useState("");
   const [error, setError] = useState<string>("");
@@ -27,7 +62,7 @@ const EmailVerification: React.FC = () => {
 
   const canResend = resendTimer === 0;
 
-  // Countdown: interval is simpler than chaining timeouts
+  // Countdown timer
   useEffect(() => {
     if (resendTimer <= 0) return;
 
@@ -38,76 +73,116 @@ const EmailVerification: React.FC = () => {
     return () => window.clearInterval(id);
   }, [resendTimer]);
 
-  // StrictMode-safe: set ref BEFORE calling API
+  // Auto-send OTP only if context is valid (prevents direct-link spam)
   const hasSentOtp = useRef(false);
   useEffect(() => {
     if (hasSentOtp.current) return;
 
-    hasSentOtp.current = true; // prevents double call in StrictMode
+    const canAutoSend =
+      (mode === "VERIFY_EMAIL" && !!user?.email && user?.verified === false) ||
+      (mode === "FORGOT_PASSWORD" && !!state?.email);
 
-    sendOtp()
-      .then(() => {
-        console.log("✅ OTP sent to:", user?.email);
-      })
-      .catch((err) => {
-        // If backend returns 429 because a previous call already sent OTP,
-        // you may want to show info instead of error:
+    if (!canAutoSend) return;
+
+    hasSentOtp.current = true;
+
+    const send = async () => {
+      try {
+        if (mode === "VERIFY_EMAIL") {
+          await requestAccountVerificationOtp();
+        } else {
+          await requestPasswordResetOtp(state!.email!);
+        }
+      } catch (err: any) {
         if (err?.response?.status === 429) {
           toast("OTP already sent. Please wait before resending.");
           return;
         }
-        toast.error("Error in sending OTP, try again");
+        toast.error("Error sending OTP. Try again.");
         console.error("❌ Error sending OTP:", err);
-      });
-  }, []);
+      }
+    };
 
-  const handleInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, OTP_LEN);
-    setVerificationCode(value);
-    if (error) setError("");
-  }, [error]);
+    send();
+  }, [mode, user?.email, user?.verified, state]);
 
-  const isSubmitDisabled = useMemo(() => loading || verificationCode.length !== OTP_LEN, [loading, verificationCode]);
+  const handleInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value.replace(/\D/g, "").slice(0, OTP_LEN);
+      setVerificationCode(value);
+      if (error) setError("");
+    },
+    [error]
+  );
+
+  const isSubmitDisabled = useMemo(
+    () => loading || verificationCode.length !== OTP_LEN,
+    [loading, verificationCode]
+  );
+
+  const primaryButtonText = useMemo(() => {
+    if (mode === "FORGOT_PASSWORD") return loading ? "Verifying..." : "Verify code";
+    return loading ? "Verifying..." : "Verify email";
+  }, [mode, loading]);
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
       e.preventDefault();
 
       if (verificationCode.length !== OTP_LEN) {
-        toast.error("Please enter a valid 6-digit verification code");
+        toast.error("Please enter a valid 6-digit code");
         return;
       }
+
+      if (!mode) return;
 
       setLoading(true);
       setError("");
 
       try {
-        const data = await confirmOtp(verificationCode);
-        const token = data?.token;
+        if (mode === "VERIFY_EMAIL") {
+          const data = await verifyAccountVerificationOtp(verificationCode);
+          const token = data?.token;
 
-        if (!token) {
-          toast.error("No token received.");
-          setError("No token received.");
-          return;
-        }
+          if (!token) {
+            toast.error("No token received.");
+            setError("No token received.");
+            return;
+          }
 
-        localStorage.setItem("token", token);
+          localStorage.setItem("token", token);
 
-        const decoded: any = decodeToken(token);
-        const isVerified = Boolean(decoded?.verified);
+          const decoded: any = decodeToken(token);
+          const isVerified = Boolean(decoded?.verified);
 
-        setUser({
-          email: decoded?.sub ?? "",
-          name: decoded?.username ?? "",
-          verified: isVerified,
-        });
+          setUser({
+            email: decoded?.sub ?? "",
+            name: decoded?.username ?? "",
+            verified: isVerified,
+          });
 
-        if (isVerified) {
-          toast.success("Email verified successfully");
-          navigate("/generate-profile");
+          if (isVerified) {
+            toast.success("Email verified successfully");
+            navigate("/generate-profile");
+          } else {
+            toast.error("Email not verified. Please try again.");
+            setError("Email not verified. Please try again.");
+          }
         } else {
-          toast.error("Email not verified. Please try again.");
-          setError("Email not verified. Please try again.");
+          // FORGOT_PASSWORD
+          const res = await verifyPasswordResetOtp(state!.email!, verificationCode);
+          const resetToken = res?.token;
+
+          if (!resetToken) {
+            toast.error("No reset token received.");
+            setError("No reset token received.");
+            return;
+          }
+
+          toast.success("OTP verified");
+          navigate("/change/password", {
+            state: { mode: "FORGOT_PASSWORD", resetToken }, 
+          });
         }
       } catch (err: any) {
         const msg =
@@ -122,18 +197,23 @@ const EmailVerification: React.FC = () => {
         setLoading(false);
       }
     },
-    [verificationCode, navigate, setUser]
+    [verificationCode, mode, navigate, setUser, state]
   );
 
   const handleResendCode = useCallback(async () => {
     if (!canResend) return;
+    if (!mode) return;
 
     setVerificationCode("");
     setError("");
     setResendTimer(RESEND_SECONDS);
 
     try {
-      await sendOtp();
+      if (mode === "VERIFY_EMAIL") {
+        await requestAccountVerificationOtp();
+      } else {
+        await requestPasswordResetOtp(state!.email!);
+      }
       toast.success("OTP resent successfully");
     } catch (err: any) {
       if (err?.response?.status === 429) {
@@ -143,7 +223,7 @@ const EmailVerification: React.FC = () => {
       console.error("Failed to resend OTP:", err);
       toast.error("Failed to resend code. Try again later.");
     }
-  }, [canResend]);
+  }, [canResend, mode, state]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4 py-10">
@@ -159,13 +239,15 @@ const EmailVerification: React.FC = () => {
             <h2 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">{EMAIL_VERIFICATION_TEXT.CODE_VERIFY.TITLE}</h2>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{EMAIL_VERIFICATION_TEXT.CODE_VERIFY.DESCRIPTION}</p>
             <p className="mt-1 text-sm font-semibold text-indigo-600 dark:text-indigo-400 break-all">
-              {user?.email ?? "—"}
+              {email || "—"}
             </p>
           </div>
 
           <form className={`mt-6 space-y-5 ${loading ? "opacity-60 pointer-events-none" : ""}`} onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Verification code</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {mode === "FORGOT_PASSWORD" ? "Reset code" : "Verification code"}
+              </label>
 
               <input
                 autoComplete="one-time-code"
@@ -193,9 +275,9 @@ const EmailVerification: React.FC = () => {
                 onClick={handleResendCode}
                 disabled={!canResend}
                 className={`inline-flex items-center gap-1 font-medium ${canResend
-                  ? "text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-                  : "text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                  }`}
+                    ? "text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                    : "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                }`}
               >
                 <RefreshCw className="h-4 w-4" />
                 {canResend ? "Resend code" : formatTime(resendTimer)}

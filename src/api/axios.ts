@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { error } from 'console';
 
 const api = axios.create({
   baseURL: 'http://localhost:8080/api', // backend port
@@ -11,14 +10,20 @@ const api = axios.create({
 // Add interceptor to attach JWT token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const authToken = localStorage.getItem('token');
 
-    // Skip token for login/register
-    const isAuthEndpoint = config.url?.includes('/auth/login') || config.url?.includes('/auth/register');
+    // Endpount that do not require token
+    const isPublicEndpoint =
+      config.url?.includes('/auth/login') ||
+      config.url?.includes('/auth/register') ||
+      config.url?.includes('/password/change/mail/send') ||
+      config.url?.includes('/password/change/mail/verify');
 
-    if (token && !isAuthEndpoint) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // normal auth token for protected calls
+    if (authToken && !isPublicEndpoint) {
+      config.headers.Authorization = `Bearer ${authToken}`;
     }
+
     return config;
   },
   (error) => {

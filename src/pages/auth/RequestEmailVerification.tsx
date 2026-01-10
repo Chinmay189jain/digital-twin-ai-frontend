@@ -59,10 +59,7 @@ const RequestEmailVerification: React.FC = () => {
         return;
       }
 
-      // UX gate only (not security)
-      localStorage.setItem("twin-email-verification", "true");
-
-      navigate("/account/verify");
+      navigate("/account/verify", { state: { mode, email } });
     },
     [emailValue, navigate, error]
   );

@@ -7,6 +7,8 @@ import { LoadingSpinner } from "../../components/LoadingSpinner";
 import toast from 'react-hot-toast';
 import { decodeToken } from '../../utils/jwtUtils';
 import { useAuth } from "../../context/AuthContext";
+import { getApiErrorMessage } from "../../utils/apiError";
+import { get } from "http";
 
 // Define the shape of form data
 interface AuthFormData {
@@ -120,7 +122,7 @@ const AuthPage: React.FC = () => {
         toast.error("Login failed: No token received.");
       }
     } catch (error: any) {
-      toast.error("Login failed. Please try again.");
+      toast.error(getApiErrorMessage(error, "Login failed. Please try again."));
       console.error("Login error:", error);
     }
   };
@@ -139,7 +141,6 @@ const AuthPage: React.FC = () => {
           verified: decoded.verified || false
         });
 
-        localStorage.setItem("twin-email-verification", "true");
         //navigate to account verification
         navigate('/account/verify');
       } else {
@@ -147,7 +148,7 @@ const AuthPage: React.FC = () => {
       }
 
     } catch (error: any) {
-      toast.error("Registration failed. Please try again.");
+      toast.error(getApiErrorMessage(error, "Registration failed. Please try again."));
       console.error("Registration error:", error);
     }
   };
@@ -275,6 +276,7 @@ const AuthPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="text-sm">
                   <div
+                    onClick={() => navigate("/user/email")}
                     className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors duration-200"
                   >
                     Forgot your password?

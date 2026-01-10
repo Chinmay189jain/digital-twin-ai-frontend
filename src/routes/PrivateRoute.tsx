@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 
 export const PrivateRoute: React.FC = () => {
   const { user } = useAuth();
-  localStorage.removeItem("twin-email-verification");
 
   if (!user) {
     // Redirect to login if user not found

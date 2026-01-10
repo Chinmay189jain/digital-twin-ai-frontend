@@ -30,10 +30,6 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleChangePassword = () => {
-    // This would normally open a change password modal or navigate to a change password page
-  };
-
   return (
     <div className="h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4 custom-scrollbar">
       <div className="max-w-2xl mx-auto">
@@ -94,7 +90,7 @@ const Settings: React.FC = () => {
                   </div>
                 </div>
                 <button
-                  onClick={handleChangePassword}
+                  onClick={() => navigate('/change/password', { state: { mode: "AUTHENTICATED" } })}
                   className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg transition-colors duration-200"
                 >
                   {SETTINGS.BUTTON_CHANGE_PASSWORD}

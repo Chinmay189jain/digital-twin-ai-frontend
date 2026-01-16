@@ -24,6 +24,8 @@ const ProfileSummary: React.FC = () => {
         console.error("Failed to fetch profile summary:", error);
         toast.error('Failed to fetch profile summary.');
         navigate('/generate-profile');   
+      } finally {
+        window.dispatchEvent(new Event("UnlockUI"));
       }
     }
     fetchSummary();

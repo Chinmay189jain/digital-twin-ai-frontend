@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, FormEvent } from "react";
+import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { BrainCog, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 import { LOGIN_TEXT, REGISTER_TEXT, FORM_ERROR } from "../../constants/text";
 import { login, register } from '../../api/authApi';
@@ -8,7 +8,8 @@ import toast from 'react-hot-toast';
 import { decodeToken } from '../../utils/jwtUtils';
 import { useAuth } from "../../context/AuthContext";
 import { getApiErrorMessage } from "../../utils/apiError";
-import { get } from "http";
+
+type Mode = "FORGOT_PASSWORD" | "VERIFY_EMAIL";
 
 // Define the shape of form data
 interface AuthFormData {
@@ -27,7 +28,18 @@ interface FormErrors {
 const AuthPage: React.FC = () => {
 
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { user, setUser } = useAuth();
+  const mode: Mode = "VERIFY_EMAIL";
+
+  useEffect(() => {
+    if (user) {
+      if (user.verified) {
+        navigate("/chat", { replace: true });
+      } else {
+        navigate("/account/verify", { replace: true });
+      }
+    }
+  }, []);
 
   // State for showing/hiding password
   const [showPassword, setShowPassword] = useState(false);
@@ -135,14 +147,15 @@ const AuthPage: React.FC = () => {
         localStorage.setItem("token", response.token);
 
         const decoded: any = decodeToken(response.token);
+        const email = decoded.sub;
         setUser({
-          email: decoded.sub,
+          email: email,
           name: decoded.username ?? "",
           verified: decoded.verified || false
         });
 
         //navigate to account verification
-        navigate('/account/verify');
+        navigate("/account/verify", { state: { mode, email } });
       } else {
         toast.error("Registration failed: No token received.");
       }
@@ -154,9 +167,9 @@ const AuthPage: React.FC = () => {
   };
 
   if (loading) {
-      return (
-        <LoadingSpinner size="sm" className="mr-2" />
-      );
+    return (
+      <LoadingSpinner size="sm" className="mr-2" />
+    );
   }
 
   return (
@@ -308,7 +321,7 @@ const AuthPage: React.FC = () => {
                 </button>
               </span>
             </div>
-            
+
           </form>
         </div>
       </div>

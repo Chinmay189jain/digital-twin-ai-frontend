@@ -15,6 +15,7 @@ import { useTwin } from '../context/TwinContext';
 import { NAVBAR_LAYOUT } from "../constants/text";
 import { getAllChatSessions } from "../api/chatApi";
 import { getProfileSummary } from '../api/profileApi';
+import { TwinGeneratingLoader } from '../components/LoadingSpinner';
 
 type LinkState = {
   isActive: boolean;
@@ -104,6 +105,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { profileSummary, setProfileSummary } = useTwin();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const [uiLocked, setUiLocked] = useState(false);
+
+  useEffect(() => {
+    const onLock = () => setUiLocked(true);
+    const onUnlock = () => setUiLocked(false);
+
+    window.addEventListener("LockUI", onLock);
+    window.addEventListener("UnlockUI", onUnlock);
+
+    return () => {
+      window.removeEventListener("LockUI", onLock);
+      window.removeEventListener("UnlockUI", onUnlock);
+    };
+  }, []);
 
   // Redirect to generate-profile if profileSummary is empty
   useEffect(() => {
@@ -245,6 +261,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       }`,
     [sidebarCollapsed]
   );
+
+  if (uiLocked) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="max-w-md w-full">
+          <TwinGeneratingLoader />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 select-none overflow-hidden">

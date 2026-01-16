@@ -29,8 +29,8 @@ export const requestAccountVerificationOtp = async () => {
 };
 
 // confirm otp for account verification api call
-export const verifyAccountVerificationOtp = async (otp: string) => {
-  const response = await api.post('/account/verify/confirm', otp);
+export const verifyAccountVerificationOtp = async (otpCode: string) => {
+  const response = await api.post('/account/verify/confirm', { otp: otpCode });
   return response.data;
 };
 

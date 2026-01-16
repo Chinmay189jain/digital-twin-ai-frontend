@@ -87,10 +87,10 @@ const EditProfile: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      setLoading(true);
+      window.dispatchEvent(new Event("LockUI"));
       const data = await updateProfileSummary(answers);
 
-      if (data) {
+      if (data && data.profileSummary) {
         setProfileSummary(data.profileSummary);
         navigate('/profile-summary');
       } else {
@@ -101,9 +101,7 @@ const EditProfile: React.FC = () => {
       toast.error('Error in generating twin profile');
       console.error('Error in generating twin profile:', error);
       navigate('/generate-profile');
-    } finally {
-      setLoading(false);
-    }
+    } 
   };
 
   return (
@@ -155,8 +153,8 @@ const EditProfile: React.FC = () => {
                               {/* Custom purple circle via Tailwind classes */}
                               <div
                                 className={`w-4 h-4 mt-1 mr-3 rounded-full border-2 flex items-center justify-center transition-colors duration-200 ${isSelected
-                                    ? 'border-violet-500 bg-violet-500'
-                                    : 'border-gray-300 bg-transparent'
+                                  ? 'border-violet-500 bg-violet-500'
+                                  : 'border-gray-300 bg-transparent'
                                   }`}
                               >
                                 {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}

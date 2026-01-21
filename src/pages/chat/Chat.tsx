@@ -10,7 +10,6 @@ import { UseSpeechRecognition } from './UseSpeechRecognition';
 import toast from 'react-hot-toast';
 import { CHATS } from '../../constants/text';
 
-// Message type used across chat files
 export interface Message {
   sessionId: string | undefined;
   question: string;
@@ -19,7 +18,6 @@ export interface Message {
 }
 
 const Chat: React.FC = () => {
-
   // Extract sessionId from the URL
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
@@ -47,20 +45,14 @@ const Chat: React.FC = () => {
   const { user } = useAuth();
 
   // Speech-to-Text
-  const {
-    isListening,
-    supportsSTT,
-    interimText,
-    toggleMic,
-    setOnFinalTranscript,
-  } = UseSpeechRecognition('en-IN');
+  const { isListening, supportsSTT, interimText, toggleMic, setOnFinalTranscript } = UseSpeechRecognition('en-IN');
 
-  // Resize textarea 
+  // Resize textarea
   const resizeTextarea = useCallback((text: string) => {
     const el = textareaRef.current;
     if (!el) return;
     if (text.trim().length <= 135) return;
-    el.style.height = '24px'; // reset to recalc
+    el.style.height = '24px';
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }, []);
 
@@ -79,9 +71,10 @@ const Chat: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        setIsLoading(true);
+        setIsLoading(true);   
         setPage(0);           // reset page when session changes
         setHasMore(false);    // reset hasMore
+
         if (sessionId && sessionId.trim()) {
           const data = await getChatHistory(sessionId, 0, 30);
           setMessages(Array.isArray(data.messages) ? data.messages : []);
@@ -91,6 +84,7 @@ const Chat: React.FC = () => {
           setMessages([]);
           setHasMore(false);
         }
+
         // reset count ref so we treat this as "first render" for scroll-to-bottom
         prevCountRef.current = 0;
       } catch (error) {
@@ -120,37 +114,8 @@ const Chat: React.FC = () => {
     prevCountRef.current = messages.length;
   }, [messages, isLoadingMore]);
 
-  // Typewriter animation for the last AI message
-  // speedMs: delay per tick; step: chars revealed per tick
-  const animateAiAnswer = useCallback((fullText: string, speedMs = 16, step = 2) => {
-    setIsStreaming(true);
-    let i = 0;
-
-    const tick = () => {
-      i = Math.min(i + step, fullText.length);
-
-      setMessages(prev => {
-        if (prev.length === 0) return prev;
-        const next = prev.slice();
-        const last = next.length - 1;
-        next[last] = { ...next[last], aiResponse: fullText.slice(0, i) };
-        return next;
-      });
-
-      if (i < fullText.length) {
-        setTimeout(tick, speedMs);
-      } else {
-        setIsStreaming(false);
-      }
-    };
-
-    tick();
-  }, []);
-
-  // Load older messages when user scrolls to top
   const handleLoadOlder = useCallback(async () => {
     if (!sessionId || !sessionId.trim() || !hasMore || isLoadingMore) return;
-
     const container = messagesContainerRef.current;
     if (!container) return;
 
@@ -165,10 +130,7 @@ const Chat: React.FC = () => {
       const data = await getChatHistory(sessionId, nextPage, 30);
 
       setMessages(prev => {
-        if (!Array.isArray(data.messages) || data.messages.length === 0) {
-          return prev;
-        }
-        // Prepend older messages at the top
+        if (!Array.isArray(data.messages) || data.messages.length === 0) return prev;
         return [...data.messages, ...prev];
       });
 
@@ -194,13 +156,16 @@ const Chat: React.FC = () => {
     const container = messagesContainerRef.current;
     if (!container || isLoadingMore || !hasMore) return;
 
-    const THRESHOLD = 120; // px from top; adjust if needed
+    const THRESHOLD = 120;
     if (container.scrollTop <= THRESHOLD) {
       handleLoadOlder();
     }
   }, [isLoadingMore, hasMore, handleLoadOlder]);
 
-  // Handlers
+  const handleStreamDone = useCallback(() => {
+    setIsStreaming(false);
+  }, []);
+
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (isTyping) return;
@@ -208,7 +173,9 @@ const Chat: React.FC = () => {
     const currentMessage = usertext.trim();
     if (!currentMessage) return;
 
-    // Clear input immediately for snappy UX
+    // stop any previous typewriter
+    setIsStreaming(false);
+
     setUserText('');
     setIsTyping(true);
     resizeTextarea('');
@@ -220,25 +187,38 @@ const Chat: React.FC = () => {
       aiResponse: '',
       timestamp: new Date().toISOString(),
     };
+
     setMessages(prev => [...prev, tempMessage]);
 
     try {
       const data = await getChatResponse(sessionId, currentMessage);
 
-      // If a new session was created, update URL (no reload)
+      // If a new session was created, update URL
       if (!sessionId || !sessionId.trim()) {
-        // clearing old session cache for layout update
         clearChatSessionsCache();
         navigate(`/chat/${data.sessionId}`, { replace: true });
       }
 
-      // Animate the last message's AI response (client-side typewriter)
       const answer = data?.aiResponse || 'No response received';
-      animateAiAnswer(answer, 30, 2);
 
+      // Put FULL answer in state, but ChatBubble will animate it without flashing
+      setMessages(prev => {
+        if (prev.length === 0) return prev;
+        const next = prev.slice();
+        const last = next.length - 1;
+        next[last] = {
+          ...next[last],
+          sessionId: data?.sessionId ?? next[last].sessionId,
+          aiResponse: answer,
+        };
+        return next;
+      });
+
+      setIsStreaming(true);
     } catch (error) {
       console.error('Chat API failed:', error);
       toast.error('Chat failed. Please try again.');
+
       setMessages(prev => {
         if (prev.length === 0) return prev;
         const next = prev.slice();
@@ -255,7 +235,6 @@ const Chat: React.FC = () => {
     }
   };
 
-  // Enter to send; Shift+Enter for newline; ignore IME composition
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.nativeEvent?.isComposing) return;
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -285,7 +264,6 @@ const Chat: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-gray-900">
-
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
         <div className="flex items-center space-x-3">
@@ -317,10 +295,11 @@ const Chat: React.FC = () => {
           <MessageList
             messages={messages}
             isTyping={isTyping}
-            isStreaming={isStreaming}   // show blinking cursor on last AI bubble
+            isStreaming={isStreaming}  // show blinking cursor on last AI bubble
             userEmail={user?.email ?? null}
             onSuggest={handleSuggestedQuestion}
             endRef={messagesEndRef}
+            onStreamDone={handleStreamDone} 
           />
         )}
       </div>
@@ -342,7 +321,6 @@ const Chat: React.FC = () => {
           }}
         />
       </div>
-
     </div>
   );
 };

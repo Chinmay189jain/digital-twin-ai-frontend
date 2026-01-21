@@ -1,13 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTwin } from '../context/TwinContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { getProfileSummary } from '../api/profileApi';
 import { PROFILE_SUMMARY } from '../constants/text';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 const ProfileSummary: React.FC = () => {
   const navigate = useNavigate();
   const { profileSummary, setProfileSummary } = useTwin();
+  const [profileLoading, setProfileLoading] = useState(true);
 
   // Redirect to /generate-profile if summary is missing
   useEffect(() => {
@@ -26,13 +28,21 @@ const ProfileSummary: React.FC = () => {
         navigate('/generate-profile');   
       } finally {
         window.dispatchEvent(new Event("UnlockUI"));
+        setProfileLoading(false);
       }
     }
     fetchSummary();
   }, [navigate, setProfileSummary]);
 
-  // If summary is empty (before redirect), render nothing
-  if (!profileSummary) return null;
+  if (profileLoading) {
+      return (
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+          <div className="max-w-md w-full">
+            <LoadingSpinner />
+          </div>
+        </div>
+      );
+    }
 
   const handleSubmit = () => {
     navigate('/chat');

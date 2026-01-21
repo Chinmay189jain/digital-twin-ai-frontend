@@ -18,20 +18,25 @@ export interface Message {
 }
 
 const Chat: React.FC = () => {
+  // Extract sessionId from the URL
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
 
+  // UI + data state
   const [usertext, setUserText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
 
+  // pagination state
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
+  // ref for scrollable container
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // animating the last AI message
   const [isStreaming, setIsStreaming] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null!);
@@ -39,8 +44,10 @@ const Chat: React.FC = () => {
 
   const { user } = useAuth();
 
+  // Speech-to-Text
   const { isListening, supportsSTT, interimText, toggleMic, setOnFinalTranscript } = UseSpeechRecognition('en-IN');
 
+  // Resize textarea
   const resizeTextarea = useCallback((text: string) => {
     const el = textareaRef.current;
     if (!el) return;
@@ -49,6 +56,7 @@ const Chat: React.FC = () => {
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }, []);
 
+  // When STT produces final text, append it to the input and resize
   useEffect(() => {
     setOnFinalTranscript((finalText) => {
       setUserText((prev) => {
@@ -59,22 +67,25 @@ const Chat: React.FC = () => {
     });
   }, [resizeTextarea, setOnFinalTranscript]);
 
+  // Load initial chat history for this session (latest page)
   useEffect(() => {
     (async () => {
       try {
-        setIsLoading(true);
-        setPage(0);
-        setHasMore(false);
+        setIsLoading(true);   
+        setPage(0);           // reset page when session changes
+        setHasMore(false);    // reset hasMore
 
         if (sessionId && sessionId.trim()) {
           const data = await getChatHistory(sessionId, 0, 30);
           setMessages(Array.isArray(data.messages) ? data.messages : []);
           setHasMore(!!data.hasMore);
         } else {
+          // New chat: no history yet
           setMessages([]);
           setHasMore(false);
         }
 
+        // reset count ref so we treat this as "first render" for scroll-to-bottom
         prevCountRef.current = 0;
       } catch (error) {
         console.error('Failed to load chats:', error);
@@ -87,13 +98,16 @@ const Chat: React.FC = () => {
     })();
   }, [sessionId]);
 
+  // Scroll to latest only when a new message is added at the bottom
   const prevCountRef = useRef<number>(0);
   useEffect(() => {
     if (messages.length === 0) return;
 
     if (prevCountRef.current === 0) {
+      // first mount / navigation / refresh: jump to bottom
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
     } else if (messages.length > prevCountRef.current && !isLoadingMore) {
+      // new message appended at bottom: smooth scroll
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
 
@@ -108,6 +122,7 @@ const Chat: React.FC = () => {
     try {
       setIsLoadingMore(true);
 
+      // Save current scroll heights BEFORE adding older messages
       const prevScrollHeight = container.scrollHeight;
       const prevScrollTop = container.scrollTop;
 
@@ -122,6 +137,7 @@ const Chat: React.FC = () => {
       setPage(nextPage);
       setHasMore(!!data.hasMore);
 
+      // After DOM updates, adjust scroll so user stays at same visible position
       requestAnimationFrame(() => {
         const newScrollHeight = container.scrollHeight;
         const heightDiff = newScrollHeight - prevScrollHeight;
@@ -135,6 +151,7 @@ const Chat: React.FC = () => {
     }
   }, [sessionId, hasMore, isLoadingMore, page]);
 
+  // Scroll handler: detect when we're near the top
   const handleScroll = useCallback(() => {
     const container = messagesContainerRef.current;
     if (!container || isLoadingMore || !hasMore) return;
@@ -163,6 +180,7 @@ const Chat: React.FC = () => {
     setIsTyping(true);
     resizeTextarea('');
 
+    // Optimistic append of the user's message at the end
     const tempMessage: Message = {
       sessionId: sessionId,
       question: currentMessage,
@@ -175,6 +193,7 @@ const Chat: React.FC = () => {
     try {
       const data = await getChatResponse(sessionId, currentMessage);
 
+      // If a new session was created, update URL
       if (!sessionId || !sessionId.trim()) {
         clearChatSessionsCache();
         navigate(`/chat/${data.sessionId}`, { replace: true });
@@ -276,7 +295,7 @@ const Chat: React.FC = () => {
           <MessageList
             messages={messages}
             isTyping={isTyping}
-            isStreaming={isStreaming}
+            isStreaming={isStreaming}  // show blinking cursor on last AI bubble
             userEmail={user?.email ?? null}
             onSuggest={handleSuggestedQuestion}
             endRef={messagesEndRef}

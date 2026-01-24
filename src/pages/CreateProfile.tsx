@@ -125,9 +125,8 @@ const CreateProfile: React.FC = () => {
       toast.error("Error in generating twin profile");
       console.error("Error in generating twin profile:", error);
       navigate('/generate-profile');
-    } finally {
       setLoading(false);
-    }
+    } 
   };
 
   if (loading) {

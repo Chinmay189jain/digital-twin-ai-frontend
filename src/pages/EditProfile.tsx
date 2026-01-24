@@ -101,6 +101,7 @@ const EditProfile: React.FC = () => {
       toast.error('Error in generating twin profile');
       console.error('Error in generating twin profile:', error);
       navigate('/generate-profile');
+      window.dispatchEvent(new Event("UnlockUI"));
     } 
   };
 

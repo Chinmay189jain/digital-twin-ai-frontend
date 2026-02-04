@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { PROFILE_SUMMARY } from '../constants/text';
-import { createProfileSummary, getProfileQuestion } from '../api/profileApi';
+import { PROFILE_SUMMARY } from '../../constants/text';
+import { createProfileSummary, getProfileQuestion } from '../../api/profileApi';
 import { useNavigate } from 'react-router-dom';
-import { useTwin } from '../context/TwinContext';
-import { LoadingSpinner, TwinGeneratingLoader } from '../components/LoadingSpinner';
+import { useTwin } from '../../context/TwinContext';
+import { LoadingSpinner, TwinGeneratingLoader } from '../../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 
 // Define the question type based on your API structure

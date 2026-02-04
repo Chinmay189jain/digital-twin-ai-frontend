@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save } from 'lucide-react';
-import { useTwin } from '../context/TwinContext';
-import { updateProfileSummary, getProfileQuestion, getProfileSummary } from '../api/profileApi';
+import { useTwin } from '../../context/TwinContext';
+import { updateProfileSummary, getProfileQuestion, getProfileSummary } from '../../api/profileApi';
 import toast from 'react-hot-toast';
-import { EDIT_PROFILE } from '../constants/text';
+import { EDIT_PROFILE } from '../../constants/text';
 
 interface ProfileQuestion {
   id: number;

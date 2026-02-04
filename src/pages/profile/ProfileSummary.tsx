@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useTwin } from '../context/TwinContext';
+import { useTwin } from '../../context/TwinContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { getProfileSummary } from '../api/profileApi';
-import { PROFILE_SUMMARY } from '../constants/text';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import { getProfileSummary } from '../../api/profileApi';
+import { PROFILE_SUMMARY } from '../../constants/text';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 const ProfileSummary: React.FC = () => {
   const navigate = useNavigate();

@@ -1,4 +1,3 @@
-import { sign } from 'crypto';
 import api from './axios';
 
 const cache = new Map<string, { data: any; timestamp: number }>();
@@ -16,16 +15,6 @@ const getCache = (key: string) => {
 
 const setCache = (key: string, data: any) => {
   cache.set(key, { data, timestamp: Date.now() });
-};
-
-// Get chat response
-export const getChatResponse = async (sessionId: string | undefined, userQuestion: string) => {
-
-  const payload: { sessionId?: string; userQuestion: string } = { userQuestion };
-  if (sessionId && sessionId.trim()) payload.sessionId = sessionId;
-
-  const response = await api.post('twin/chat', payload);
-  return response.data;
 };
 
 // Get Chat History

@@ -11,13 +11,13 @@ import Home from "./pages/Home";
 
 // lazy loaded components
 const AuthPage = lazy(() => import("./pages/auth/AuthPage"));
-const CreateProfile = lazy(() => import("./pages/CreateProfile"));
-const ProfileSummary = lazy(() => import("./pages/ProfileSummary"));
+const CreateProfile = lazy(() => import("./pages/profile/CreateProfile"));
+const ProfileSummary = lazy(() => import("./pages/profile/ProfileSummary"));
 const Layout = lazy(() => import("./components/Layout"));
 
 const Chat = lazy(() => import("./pages/chat/Chat"));
 const History = lazy(() => import("./pages/History"));
-const EditProfile = lazy(() => import("./pages/EditProfile"));
+const EditProfile = lazy(() => import("./pages/profile/EditProfile"));
 const Settings = lazy(() => import("./pages/Settings"));
 
 const EmailVerification = lazy(() => import("./pages/auth/EmailVerification"));

@@ -7,7 +7,7 @@ import { deleteAccount } from '../api/authApi';
 import { SETTINGS } from '../constants/text';
 
 const Settings: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const navigate = useNavigate();
 
@@ -19,8 +19,8 @@ const Settings: React.FC = () => {
     // This would normally make an API call to delete the account
     try {
       await deleteAccount();
+      logout();
       toast.success('Account deleted');
-      localStorage.removeItem("token");
       navigate("/");
     } catch(err){
       console.error(err);

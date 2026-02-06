@@ -341,7 +341,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
 
               <div
-                className="mt-2 pb-2 max-h-64 pr-1 space-y-1"
+                className="mt-2 pb-2 max-h-64 pr-1 space-y-1 overflow-y-scroll custom-scrollbar"
               >
                 {recentChats.map((chat) => {
                   const isActive = chat.id === activeChatId;

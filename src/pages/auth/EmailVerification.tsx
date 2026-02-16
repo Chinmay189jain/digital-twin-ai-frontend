@@ -150,8 +150,6 @@ const EmailVerification: React.FC = () => {
             return;
           }
 
-          localStorage.setItem("token", token);
-
           const decoded: any = decodeToken(token);
           const isVerified = Boolean(decoded?.verified);
 
@@ -164,6 +162,7 @@ const EmailVerification: React.FC = () => {
           if (isVerified) {
             toast.success("Email verified successfully");
             navigate("/generate-profile");
+            localStorage.setItem("token", token);
           } else {
             toast.error("Email not verified. Please try again.");
             setError("Email not verified. Please try again.");

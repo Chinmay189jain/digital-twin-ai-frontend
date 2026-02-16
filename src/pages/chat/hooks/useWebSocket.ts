@@ -3,7 +3,7 @@ import { createTwinSocket } from '../services/TwinSocket';
 import type { TwinWebSocketEvent, TwinWsQuestionRequest } from '../types/TwinTypes';
 import { getAuthToken } from '../utils/messageUtils';
 
-const WS_URL = 'http://localhost:8080/ws';
+const WS_URL = "/ws";
 
 interface UseWebSocketOptions {
   onEvent: (event: TwinWebSocketEvent) => void;

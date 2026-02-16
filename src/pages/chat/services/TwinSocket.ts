@@ -44,7 +44,8 @@ export function createTwinSocket({
   });
 
   client.activate();
-  client.debug = (msg) => console.log("[STOMP]", msg);
+  // Uncomment for debugging STOMP frames
+  //client.debug = (msg) => console.log("[STOMP]", msg);
 
   return {
     client,

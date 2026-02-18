@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { requestAccountVerificationOtp, verifyAccountVerificationOtp } from "../../api/authApi";
-import { requestPasswordResetOtp, verifyPasswordResetOtp } from "../../api/passwordResetApi"; 
+import { requestPasswordResetOtp, verifyPasswordResetOtp } from "../../api/passwordResetApi";
 import { decodeToken } from "../../utils/jwtUtils";
 import { EMAIL_VERIFICATION_TEXT } from "../../constants/text";
 
@@ -51,9 +51,9 @@ const EmailVerification: React.FC = () => {
 
     // FORGOT_PASSWORD requires an email passed from previous screen
     if (mode === "FORGOT_PASSWORD" && !state?.email) {
-      navigate("/auth", { replace: true }); 
+      navigate("/auth", { replace: true });
     }
-  }, [mode, user?.email, user?.verified, state?.email, navigate]);
+  }, [mode, user?.email, state?.email, navigate]);
 
   const [verificationCode, setVerificationCode] = useState("");
   const [error, setError] = useState<string>("");
@@ -120,11 +120,6 @@ const EmailVerification: React.FC = () => {
     [loading, verificationCode]
   );
 
-  const primaryButtonText = useMemo(() => {
-    if (mode === "FORGOT_PASSWORD") return loading ? "Verifying..." : "Verify code";
-    return loading ? "Verifying..." : "Verify email";
-  }, [mode, loading]);
-
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
       e.preventDefault();
@@ -153,16 +148,17 @@ const EmailVerification: React.FC = () => {
           const decoded: any = decodeToken(token);
           const isVerified = Boolean(decoded?.verified);
 
-          setUser({
-            email: decoded?.sub ?? "",
-            name: decoded?.username ?? "",
-            verified: isVerified,
-          });
-
           if (isVerified) {
             toast.success("Email verified successfully");
-            navigate("/generate-profile");
             localStorage.setItem("token", token);
+
+            setUser({
+              email: decoded?.sub ?? "",
+              name: decoded?.username ?? "",
+              verified: isVerified,
+            });
+
+            navigate("/generate-profile");
           } else {
             toast.error("Email not verified. Please try again.");
             setError("Email not verified. Please try again.");
@@ -180,7 +176,7 @@ const EmailVerification: React.FC = () => {
 
           toast.success("OTP verified");
           navigate("/change/password", {
-            state: { mode: "FORGOT_PASSWORD", resetToken }, 
+            state: { mode: "FORGOT_PASSWORD", resetToken },
           });
         }
       } catch (err: any) {
@@ -274,9 +270,9 @@ const EmailVerification: React.FC = () => {
                 onClick={handleResendCode}
                 disabled={!canResend}
                 className={`inline-flex items-center gap-1 font-medium ${canResend
-                    ? "text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-                    : "text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                }`}
+                  ? "text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                  : "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                  }`}
               >
                 <RefreshCw className="h-4 w-4" />
                 {canResend ? "Resend code" : formatTime(resendTimer)}

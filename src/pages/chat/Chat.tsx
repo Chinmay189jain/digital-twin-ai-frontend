@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from "react-router-dom";
 import { Bot } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useWebSocketContext } from '../../context/WebSocketContext';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { getChatHistory, clearChatSessionsCache } from '../../api/chatApi';
 import MessageList from './MessageList';
@@ -10,7 +11,6 @@ import { UseSpeechRecognition } from './hooks/UseSpeechRecognition';
 import toast from 'react-hot-toast';
 import { CHATS } from '../../constants/text';
 import type { TwinWsQuestionRequest, TwinWebSocketEvent } from './types/TwinTypes';
-import { useWebSocket } from './hooks/useWebSocket';
 import { useMessageHandler } from './hooks/useMessageHandler';
 import {
   createOptimisticMessage,
@@ -39,7 +39,7 @@ const Chat: React.FC = () => {
   // Hooks & Context
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { isConnected, sendChat, subscribe } = useWebSocketContext();
   const { isListening, supportsSTT, interimText, toggleMic, setOnFinalTranscript } =
     UseSpeechRecognition('en-IN');
 
@@ -49,6 +49,7 @@ const Chat: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null!);
   const messageCountRef = useRef<number>(0);
   const skipNextHistoryLoadRef = useRef(false);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   // State - UI & Content
   const [userText, setUserText] = useState('');
@@ -80,15 +81,6 @@ const Chat: React.FC = () => {
     },
   });
 
-  const handleWsEventWrapper = useCallback(
-    (event: TwinWebSocketEvent) => handleWsEvent(event, messages, setMessages),
-    [handleWsEvent, messages]
-  );
-
-  const { sendChat, isConnected } = useWebSocket({
-    onEvent: handleWsEventWrapper,
-  });
-
 
   // Effects - Update active session when URL param changes
   useEffect(() => {
@@ -96,6 +88,23 @@ const Chat: React.FC = () => {
     setIsStreaming(false);
     setIsTyping(false);
   }, [sessionId]);
+
+  // Effects - Subscribe to WebSocket events
+  useEffect(() => {
+    // Create handler that captures current messages state
+    const eventHandler = (event: TwinWebSocketEvent) => {
+      handleWsEvent(event, messages, setMessages);
+    };
+
+    // Subscribe to WebSocket events using the shared connection
+    unsubscribeRef.current = subscribe(eventHandler);
+
+    // Cleanup: unsubscribe when component unmounts
+    return () => {
+      unsubscribeRef.current?.();
+      unsubscribeRef.current = null;
+    };
+  }, [messages, handleWsEvent, subscribe]);
 
 
   // Effects - Resize textarea based on content
@@ -333,11 +342,10 @@ const Chat: React.FC = () => {
       messages,
       isTyping,
       isStreaming,
-      userEmail: user?.email ?? null,
       onSuggest: handleSuggestedQuestion,
       endRef: messagesEndRef,
     }),
-    [messages, isTyping, isStreaming, user?.email, handleSuggestedQuestion]
+    [messages, isTyping, isStreaming, handleSuggestedQuestion]
   );
 
   const chatInputProps = useMemo(
@@ -382,20 +390,24 @@ const Chat: React.FC = () => {
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="custom-scrollbar flex-1 px-6 py-4 space-y-4 bg-gray-50 dark:bg-gray-900"
+        className="custom-scrollbar flex-1 min-h-0 overflow-y-auto bg-gray-50 dark:bg-gray-900"
       >
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <LoadingSpinner />
-          </div>
-        ) : (
-          <MessageList {...messageListProps} />
-        )}
+        <div className="mx-auto w-full max-w-4xl px-4 md:px-8 py-10">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-[50vh]">
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <MessageList {...messageListProps} />
+          )}
+        </div>
       </div>
 
       {/* Input */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
-        <ChatInput {...chatInputProps} />
+      <div className="px-4 md:px-8 pb-6 pt-3 flex-shrink-0 bg-transparent">
+        <div className="mx-auto w-full max-w-4xl">
+          <ChatInput {...chatInputProps} />
+        </div>
       </div>
     </div>
   );
